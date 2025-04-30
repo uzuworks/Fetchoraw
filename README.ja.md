@@ -1,24 +1,24 @@
-# Fetchoraw
+# Fetchoraw (日本語版)
 
 [![npm version](https://img.shields.io/npm/v/fetchoraw)](https://www.npmjs.com/package/fetchoraw)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/fetchoraw)](https://bundlephobia.com/package/fetchoraw)
 
-**Fetchoraw** is a tiny library to transform asset URLs in HTML.
-You can rewrite `src`, `href`, and other attributes using your custom resolver.
+**Fetchoraw** は、HTML内のアセットURL（`src`、`href`など）を変換するための小さなライブラリです。
+カスタムリゾルバを使って自由にURLを書き換えることができます。
 
-[Read this page in Japanese →](./README.ja.md)
-
----
-
-## ✨ Features
-
-- Rewrite HTML asset links easily
-- Use your own resolver for URL rewriting
-- Simple and flexible API
+[View this page in English →](./README.md)
 
 ---
 
-## 📆 Install
+## ✨ 特徴
+
+- HTML内のアセットリンクを簡単に変換
+- 任意のルールでリゾルバを作成可能
+- シンプルで柔軟なAPI
+
+---
+
+## 📆 インストール
 
 ```bash
 npm install fetchoraw
@@ -26,12 +26,12 @@ npm install fetchoraw
 
 ---
 
-## 🚀 Usage
+## 🚀 使い方
 
 ```ts
 import { Fetchoraw } from 'fetchoraw';
 
-// Example: Rewrite a CDN URL to a local asset path
+// 例: CDN URLをローカルパスに書き換えるリゾルバ
 const resolver = async (url: string) => url.replace('https://cdn.example.com/', '/assets/');
 
 const fetchoraw = new Fetchoraw(resolver);
@@ -45,24 +45,24 @@ console.log(map);  // Map { "https://cdn.example.com/images/pic.png" => "/assets
 
 ---
 
-## 🛠 Overview
+## 🛠 概要
 
-### Fetchoraw class
+### Fetchoraw クラス
 
 - `new Fetchoraw(resolver, options?)`
-  - `resolver`: `(url) => Promise<string>`
-  - `options.envModeName?`: environment variable name to control rewriting (default: `"FETCHORAW_MODE"`)
-  - `options.enableEnvValue?`: value that enables rewriting (default: `"FETCH"`)
+  - `resolver`: `(url) => Promise<string>` 型の関数
+  - `options.envModeName?`: 環境変数の名前（デフォルト: `"FETCHORAW_MODE"`）
+  - `options.enableEnvValue?`: 有効化する値（デフォルト: `"FETCH"`）
 
 - `await fetchoraw.exec(html, config?)`
-  - `html`: input HTML string
-  - `config.selectors?`: target selectors to rewrite (default presets provided)
+  - `html`: 入力HTML文字列
+  - `config.selectors?`: 書き換え対象のセレクタリスト（デフォルトあり）
 
-### Resolver Types
+### リゾルバ種類と使い方
 
-You can create your own resolver or use built-in resolvers:
+自作リゾルバのほか、以下の組み込みリゾルバが利用できます。
 
-- **Data URL Resolver**: Fetches a file and inlines it as a base64 `data:` URL.
+- **Data URLリゾルバ**: ファイルを取得してBase64の `data:` URLに変換します。
 
   ```ts
   import { createDataUrlResolver } from 'fetchoraw';
@@ -74,7 +74,7 @@ You can create your own resolver or use built-in resolvers:
   console.log(html); // <html><body><img src="data:image/png;base64,..."></body></html>
   ```
 
-- **File Save Resolver**: Downloads a file and saves it to your local filesystem.
+- **ファイル保存リゾルバ**: ファイルをダウンロードしてローカルに保存します。
 
   ```ts
   import { createFileSaveResolver } from 'fetchoraw';
@@ -86,7 +86,7 @@ You can create your own resolver or use built-in resolvers:
   console.log(html); // <html><body><img src="/assets/images/pic.png"></body></html>
   ```
 
-- **Smart Resolver**: Tries to inline small files as data URLs, otherwise saves as local files.
+- **スマートリゾルバ**: 小さいファイルはData URL化、それ以外はローカル保存に自動で振り分けます。
 
   ```ts
   import { createSmartResolver } from 'fetchoraw';
@@ -95,12 +95,12 @@ You can create your own resolver or use built-in resolvers:
   const fetchoraw = new Fetchoraw(resolver);
   const { html } = await fetchoraw.exec('<html><body><img src="https://cdn.example.com/images/pic.png"></body></html>');
 
-  console.log(html); // data URL or saved path based on file size
+  console.log(html); // ファイルサイズに応じた結果が出力されます
   ```
 
 ---
 
-## 📄 License
+## 📄 ライセンス
 
 MIT
 
