@@ -1,0 +1,74 @@
+{
+  "name": "fetchoraw",
+  "version": "1.0.0",
+  "description": "A simple resolver-based URL transformer for Astro and CMS-driven projects.",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uzuworks/Fetchoraw.git"
+  },
+  "homepage": "https://github.com/uzuworks/Fetchoraw",
+  "author": "uzuworks",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./cli": {
+      "require": "./dist/cli.cjs"
+    }
+  },
+  "bin": {
+    "fetchoraw": "dist/cli.cjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.ja.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "dev": "rollup -c -w",
+    "build": "rollup -c",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "astro",
+    "cms",
+    "html",
+    "url",
+    "transform",
+    "selector",
+    "fetchoraw"
+  ],
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/node": "^22.14.1",
+    "@vitest/coverage-v8": "^3.1.1",
+    "execa": "^9.5.2",
+    "rollup": "^4.40.0",
+    "rollup-plugin-dts": "^6.2.1",
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "mime": "^4.0.7"
+  }
+}
