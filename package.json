@@ -2,7 +2,6 @@
   "name": "fetchoraw",
   "version": "1.0.0",
   "description": "A simple resolver-based URL transformer for Astro and CMS-driven projects.",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/uzuworks/Fetchoraw.git"
