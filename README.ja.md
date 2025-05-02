@@ -1,7 +1,7 @@
 # Fetchoraw (日本語版)
 
 [![npm version](https://img.shields.io/npm/v/fetchoraw)](https://www.npmjs.com/package/fetchoraw)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/fetchoraw)](https://bundlephobia.com/package/fetchoraw)
+[![MIT License](https://img.shields.io/npm/l/fetchoraw)](./LICENSE)
 
 **Fetchoraw** は、HTML内のアセットURL（`src`、`href`など）を変換するための小さなライブラリです。
 カスタムリゾルバを使って自由にURLを書き換えることができます。

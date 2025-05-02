@@ -1,7 +1,7 @@
 # Fetchoraw
 
 [![npm version](https://img.shields.io/npm/v/fetchoraw)](https://www.npmjs.com/package/fetchoraw)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/fetchoraw)](https://bundlephobia.com/package/fetchoraw)
+[![MIT License](https://img.shields.io/npm/l/fetchoraw)](./LICENSE)
 
 **Fetchoraw** is a tiny library to transform asset URLs in HTML.
 You can rewrite `src`, `href`, and other attributes using your custom resolver.
