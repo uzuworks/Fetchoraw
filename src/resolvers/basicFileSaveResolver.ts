@@ -1,6 +1,6 @@
-import { Buffer } from 'node:buffer';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { basename, dirname, extname, join, normalize } from 'node:path';
+import { Buffer } from 'buffer';
+import { mkdir, writeFile } from 'fs/promises';
+import { basename, dirname, extname, join, normalize } from 'path';
 import type { FileSaveResolverOptions } from '../types';
 import {
   DEFAULT_SAVE_ROOT,

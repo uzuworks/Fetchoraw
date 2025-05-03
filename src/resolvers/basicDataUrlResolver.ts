@@ -1,5 +1,5 @@
-import { Buffer } from 'node:buffer';
-import { extname } from 'node:path';
+import { Buffer } from 'buffer';
+import { extname } from 'path';
 import mime from 'mime';
 import type { DataUrlResolverOptions } from '../types';
 import {

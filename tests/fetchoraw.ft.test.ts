@@ -3,7 +3,7 @@ import { Fetchoraw } from '../src/index';
 import { createFileSaveResolver } from '../src/resolvers/basicFileSaveResolver';
 
 // Mock fs/promises
-vi.mock('node:fs/promises', async () => ({
+vi.mock('fs/promises', async () => ({
   mkdir: vi.fn(async () => {}),
   writeFile: vi.fn(async () => {}),
 }));
