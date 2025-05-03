@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createFileSaveResolver } from '../src/resolvers/basicFileSaveResolver';
 
 // Mock fs/promises for file operations
-vi.mock('node:fs/promises', async () => ({
+vi.mock('fs/promises', async () => ({
   mkdir: vi.fn(async () => {}),
   writeFile: vi.fn(async () => {}),
 }));
