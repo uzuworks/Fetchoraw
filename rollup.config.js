@@ -32,8 +32,13 @@ export default defineConfig([
         banner
       }
     ],
-    plugins: [resolve(), json(), commonjs(), typescript({ tsconfig: './tsconfig.json' })],
-    external: [],
+    external: [
+      'fs', 'path', 'url', 'stream', 'buffer', 'util', 'zlib', 'events',
+      'assert', 'tls', 'net', 'http', 'https', 'console', 'worker_threads',
+      'querystring', 'diagnostics_channel', 'perf_hooks', 'async_hooks', 'dns',
+      'cheerio', 'mime'
+    ],
+    plugins: [resolve(), json(), commonjs({transformMixedEsModules: true}), typescript({ tsconfig: './tsconfig.json' })],
   },
 
   // CLI
