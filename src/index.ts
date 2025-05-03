@@ -12,6 +12,9 @@ import {
   DEFAULT_SELECTORS
 } from './defaults';
 import { cmsUrls, urlSelectors } from './presets';
+export { createDataUrlResolver } from './resolvers/basicDataUrlResolver';
+export { createFileSaveResolver } from './resolvers/basicFileSaveResolver';
+export { createSmartResolver } from './resolvers/smartResolver';
 
 /**
  * Fetchoraw: rewrite asset URLs in HTML.
