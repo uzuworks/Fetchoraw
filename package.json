@@ -23,9 +23,6 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "bin": {
-    "fetchoraw": "dist/cli.cjs"
-  },
   "files": [
     "dist",
     "README.md",
