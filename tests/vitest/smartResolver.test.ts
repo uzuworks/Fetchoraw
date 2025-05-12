@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createSmartResolver } from '../src/resolvers/smartResolver';
+import { createSmartResolver } from '../../src/resolvers/smartResolver';
 
 const mockDataUrl = vi.fn();
 const mockFileSave = vi.fn();
 
-vi.mock('../src/resolvers/basicDataUrlResolver', async () => ({
+vi.mock('../../src/resolvers/basicDataUrlResolver', async () => ({
   createDataUrlResolver: () => mockDataUrl,
 }));
-vi.mock('../src/resolvers/basicFileSaveResolver', async () => ({
+vi.mock('../../src/resolvers/basicFileSaveResolver', async () => ({
   createFileSaveResolver: () => mockFileSave,
 }));
 

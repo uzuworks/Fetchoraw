@@ -1,4 +1,4 @@
-import type { SmartResolverOptions } from '../types';
+import type { SmartResolverOptions } from '../types.js';
 import {
   DEFAULT_TARGET_PATTERN,
   DEFAULT_INLINE_LIMIT,
@@ -6,10 +6,10 @@ import {
   DEFAULT_SAVE_ROOT,
   DEFAULT_PREPEND_PATH,
   DEFAULT_ON_ERROR
-} from '../defaults';
+} from '../defaults.js';
 
-import { createDataUrlResolver } from './basicDataUrlResolver';
-import { createFileSaveResolver } from './basicFileSaveResolver';
+import { createDataUrlResolver } from './basicDataUrlResolver.js';
+import { createFileSaveResolver } from './basicFileSaveResolver.js';
 
 /**
  * Create a smart resolver that tries data URL first, then file save.

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { execa } from 'execa'
 import { join } from 'path'
 
 const cliPath = join(__dirname, '../dist/cli.cjs')

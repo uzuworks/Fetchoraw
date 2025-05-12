@@ -2,6 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/fetchoraw)](https://www.npmjs.com/package/fetchoraw)
 [![MIT License](https://img.shields.io/npm/l/fetchoraw)](./LICENSE)
+![type: module](https://img.shields.io/badge/type-module-green)
 
 **Fetchoraw** is a tiny library to transform asset URLs in HTML.
 You can rewrite `src`, `href`, and other attributes using your custom resolver.
@@ -12,9 +13,10 @@ You can rewrite `src`, `href`, and other attributes using your custom resolver.
 
 ## ✨ Features
 
-- Rewrite HTML asset links easily
-- Use your own resolver for URL rewriting
-- Simple and flexible API
+* Rewrite HTML asset links easily
+* Use your own resolver for URL rewriting
+* Supports both full HTML and individual URL resolution
+* Simple and flexible API
 
 ---
 
@@ -28,19 +30,30 @@ npm install fetchoraw
 
 ## 🚀 Usage
 
+### Rewrite HTML with custom resolver
+
 ```ts
 import { Fetchoraw } from 'fetchoraw';
 
-// Example: Rewrite a CDN URL to a local asset path
-const resolver = async (url: string) => url.replace('https://cdn.example.com/', '/assets/');
+const resolver = async (url: string) =>
+  url.replace('https://cdn.example.com/', '/assets/');
 
 const fetchoraw = new Fetchoraw(resolver);
-const { html, map } = await fetchoraw.exec(
+const { output: html, map } = await fetchoraw.html(
   '<html><body><img src="https://cdn.example.com/images/pic.png"></body></html>'
 );
 
 console.log(html); // <html><body><img src="/assets/images/pic.png"></body></html>
 console.log(map);  // Map { "https://cdn.example.com/images/pic.png" => "/assets/images/pic.png" }
+```
+
+### Resolve a single URL
+
+```ts
+const fetchoraw = new Fetchoraw(resolver);
+const { output: newUrl } = await fetchoraw.url('https://cdn.example.com/images/pic.png');
+
+console.log(newUrl); // "/assets/images/pic.png"
 ```
 
 ---
@@ -49,58 +62,78 @@ console.log(map);  // Map { "https://cdn.example.com/images/pic.png" => "/assets
 
 ### Fetchoraw class
 
-- `new Fetchoraw(resolver, options?)`
-  - `resolver`: `(url) => Promise<string>`
-  - `options.envModeName?`: environment variable name to control rewriting (default: `"FETCHORAW_MODE"`)
-  - `options.enableEnvValue?`: value that enables rewriting (default: `"FETCH"`)
+* `new Fetchoraw(resolver, options?)`
 
-- `await fetchoraw.exec(html, config?)`
-  - `html`: input HTML string
-  - `config.selectors?`: target selectors to rewrite (default presets provided)
+  * `resolver`: `(url: string) => Promise<string>`
+  * `options.envModeName?`: environment variable name to control rewriting (default: `"FETCHORAW_MODE"`)
+  * `options.enableEnvValue?`: value that enables rewriting (default: `"FETCH"`)
 
-### Resolver Types
+* `await fetchoraw.html(html, config?)`
+
+  * `html`: input HTML string
+  * `config.selectors?`: target selectors to rewrite (default presets provided)
+  * returns `{ output: string, map: Map<string, string> }`
+
+* `await fetchoraw.url(url, origin?)`
+
+  * `url`: target URL string (absolute, relative, or protocol-relative)
+  * `origin?`: base origin to resolve relative URLs
+  * returns `{ output: string, map: Map<string, string> }`
+
+---
+
+## 🧙‍♂️ Resolver Types
 
 You can create your own resolver or use built-in resolvers:
 
-- **Data URL Resolver**: Fetches a file and inlines it as a base64 `data:` URL.
+### Data URL Resolver
 
-  ```ts
-  import { createDataUrlResolver } from 'fetchoraw';
+Fetches a file and inlines it as a base64 `data:` URL.
 
-  const resolver = createDataUrlResolver();
-  const fetchoraw = new Fetchoraw(resolver);
-  const { html } = await fetchoraw.exec('<html><body><img src="https://cdn.example.com/images/pic.png"></body></html>');
+```ts
+import { createDataUrlResolver } from 'fetchoraw';
 
-  console.log(html); // <html><body><img src="data:image/png;base64,..."></body></html>
-  ```
+const resolver = createDataUrlResolver();
+const fetchoraw = new Fetchoraw(resolver);
+const { output: html } = await fetchoraw.html('<img src="https://cdn.example.com/images/pic.png">');
 
-- **File Save Resolver**: Downloads a file and saves it to your local filesystem.
+console.log(html); // <img src="data:image/png;base64,...">
+```
 
-  ```ts
-  import { createFileSaveResolver } from 'fetchoraw';
+### File Save Resolver
 
-  const resolver = createFileSaveResolver({ saveRoot: 'public/assets', prependPath: 'assets' });
-  const fetchoraw = new Fetchoraw(resolver);
-  const { html } = await fetchoraw.exec('<html><body><img src="https://cdn.example.com/images/pic.png"></body></html>');
+Downloads a file and saves it to your local filesystem.
 
-  console.log(html); // <html><body><img src="/assets/images/pic.png"></body></html>
-  ```
+```ts
+import { createFileSaveResolver } from 'fetchoraw';
 
-- **Smart Resolver**: Tries to inline small files as data URLs, otherwise saves as local files.
+const resolver = createFileSaveResolver({
+  saveRoot: 'public/assets',
+  prependPath: 'assets'
+});
+const fetchoraw = new Fetchoraw(resolver);
+const { output: html } = await fetchoraw.html('<img src="https://cdn.example.com/images/pic.png">');
 
-  ```ts
-  import { createSmartResolver } from 'fetchoraw';
+console.log(html); // <img src="/assets/images/pic.png">
+```
 
-  const resolver = createSmartResolver({ inlineLimitBytes: 500000 });
-  const fetchoraw = new Fetchoraw(resolver);
-  const { html } = await fetchoraw.exec('<html><body><img src="https://cdn.example.com/images/pic.png"></body></html>');
+### Smart Resolver
 
-  console.log(html); // data URL or saved path based on file size
-  ```
+Tries to inline small files as data URLs, otherwise saves as local files.
+
+```ts
+import { createSmartResolver } from 'fetchoraw';
+
+const resolver = createSmartResolver({ inlineLimitBytes: 500000 });
+const fetchoraw = new Fetchoraw(resolver);
+const { output: html } = await fetchoraw.html('<img src="https://cdn.example.com/images/pic.png">');
+
+// Result depends on file size: data URL or saved path
+console.log(html);
+```
 
 ---
 
 ## 📄 License
 
 MIT
-

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createFileSaveResolver } from '../src/resolvers/basicFileSaveResolver';
+import { createFileSaveResolver } from '../../src/resolvers/basicFileSaveResolver';
 
 // Mock fs/promises for file operations
 vi.mock('fs/promises', async () => ({

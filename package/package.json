@@ -1,0 +1,46 @@
+{
+  "name": "fetchoraw",
+  "description": "A simple resolver-based URL transformer for Astro and CMS-driven projects.",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./index.mjs",
+  "module": "./index.mjs",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "default": "./index.mjs",
+        "types": "./index.d.ts"
+      }
+    },
+    "./resolvers": {
+      "import": {
+        "default": "./resolvers/index.mjs",
+        "types": "./resolvers/index.d.ts"
+      }
+    }
+  },
+  "files": [
+    "index.mjs",
+    "index.d.ts",
+    "resolvers",
+    "README.md",
+    "README.ja.md",
+    "package.json"
+  ],
+  "sideEffects": false,
+  "author": "uzuworks",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.17.1"
+  },
+  "keywords": [
+    "astro",
+    "cms",
+    "html",
+    "url",
+    "transform",
+    "selector",
+    "fetchoraw"
+  ]
+}

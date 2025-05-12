@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "moduleResolution": "nodenext",
+    "outDir": "types/resolvers",
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "include": ["src/resolvers/index.ts"]
+}

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Fetchoraw } from '../src/index';
+import { Fetchoraw } from '../../src/index';
 
 const testUrl = 'https://example.com/test.png';
 
-describe('Fetchoraw (Environment: default FETCHORAW_MODE)', () => {
+describe('Fetchoraw.html()', () => {
   beforeEach(() => {
     vi.resetModules();
     delete process.env.FETCHORAW_MODE;
@@ -13,14 +13,14 @@ describe('Fetchoraw (Environment: default FETCHORAW_MODE)', () => {
     const mockResolver = vi.fn(async url => `ok:${url}`);
     const fetchoraw = new Fetchoraw(mockResolver);
 
-    const { html, map } = await fetchoraw.exec(
+    const { output, map } = await fetchoraw.html(
       `<img src="${testUrl}">`,
       { selectors: [Fetchoraw.SelectorPresets.ImgSrc] }
     );
 
     expect(mockResolver).not.toHaveBeenCalled();
-    expect(html).toContain(`src="${testUrl}"`);
-    expect(map.get(testUrl)).toBe(testUrl);
+    expect(output).toContain(`src="${testUrl}"`);
+    expect(map.get(testUrl)).toBe(void 0);
   });
 
   it('FETCHORAW_MODE non-matching -> skips resolver & keeps original URL', async () => {
@@ -28,14 +28,14 @@ describe('Fetchoraw (Environment: default FETCHORAW_MODE)', () => {
     const mockResolver = vi.fn(async url => `ok:${url}`);
     const fetchoraw = new Fetchoraw(mockResolver);
 
-    const { html, map } = await fetchoraw.exec(
+    const { output, map } = await fetchoraw.html(
       `<img src="${testUrl}">`,
       { selectors: [Fetchoraw.SelectorPresets.ImgSrc] }
     );
 
     expect(mockResolver).not.toHaveBeenCalled();
-    expect(html).toContain(`src="${testUrl}"`);
-    expect(map.get(testUrl)).toBe(testUrl);
+    expect(output).toContain(`src="${testUrl}"`);
+    expect(map.get(testUrl)).toBe(void 0);
   });
 
   it('FETCHORAW_MODE matching -> calls resolver & rewrites URL', async () => {
@@ -43,13 +43,13 @@ describe('Fetchoraw (Environment: default FETCHORAW_MODE)', () => {
     const mockResolver = vi.fn(async url => `ok:${url}`);
     const fetchoraw = new Fetchoraw(mockResolver);
 
-    const { html, map } = await fetchoraw.exec(
+    const { output, map } = await fetchoraw.html(
       `<img src="${testUrl}">`,
       { selectors: [Fetchoraw.SelectorPresets.ImgSrc] }
     );
 
     expect(mockResolver).toHaveBeenCalledWith(testUrl);
-    expect(html).toContain(`src="ok:${testUrl}"`);
+    expect(output).toContain(`src="ok:${testUrl}"`);
     expect(map.get(testUrl)).toBe(`ok:${testUrl}`);
   });
 });
@@ -66,12 +66,12 @@ describe('Fetchoraw (Selectors: default and custom)', () => {
     const fetchoraw = new Fetchoraw(mockResolver);
 
     const skipUrl = 'https://example.com/skip.css';
-    const { html, map } = await fetchoraw.exec(
+    const { output, map } = await fetchoraw.html(
       `<a href="${skipUrl}">link</a>`,
     );
 
     expect(mockResolver).not.toHaveBeenCalled();
-    expect(html).toContain(`<a href="${skipUrl}">link</a>`);
+    expect(output).toContain(`<a href="${skipUrl}">link</a>`);
     expect(map.size).toBe(0);
   });
 
@@ -81,12 +81,12 @@ describe('Fetchoraw (Selectors: default and custom)', () => {
     const mockResolver = vi.fn(async u => `ok:${u}`);
     const fetchoraw = new Fetchoraw(mockResolver);
 
-    const { html, map } = await fetchoraw.exec(
+    const { output, map } = await fetchoraw.html(
       `<video poster="${posterUrl}"></video>`,
     );
 
     expect(mockResolver).toHaveBeenCalledWith(posterUrl);
-    expect(html).toContain(`poster="ok:${posterUrl}"`);
+    expect(output).toContain(`poster="ok:${posterUrl}"`);
     expect(map.get(posterUrl)).toBe(`ok:${posterUrl}`);
   });
 
@@ -96,13 +96,13 @@ describe('Fetchoraw (Selectors: default and custom)', () => {
     const fetchoraw = new Fetchoraw(mockResolver);
 
     const htmlIn = `<img src="x.png"><video poster="y.jpg"></video>`;
-    const { html, map } = await fetchoraw.exec(
+    const { output, map } = await fetchoraw.html(
       htmlIn,
       { selectors: [Fetchoraw.SelectorPresets.ImgSrc] }
     );
 
     expect(mockResolver).toHaveBeenCalledWith('x.png');
-    expect(html).toContain(`poster="y.jpg"`);
+    expect(output).toContain(`poster="y.jpg"`);
     expect(map.size).toBe(1);
   });
 
@@ -112,15 +112,15 @@ describe('Fetchoraw (Selectors: default and custom)', () => {
     const fetchoraw = new Fetchoraw(mockResolver);
 
     const htmlIn = `<img><img src="${testUrl}">`;
-    const { html, map } = await fetchoraw.exec(
+    const { output, map } = await fetchoraw.html(
       htmlIn,
       { selectors: [Fetchoraw.SelectorPresets.ImgSrc] }
     );
 
     expect(mockResolver).toHaveBeenCalledTimes(1);
     expect(mockResolver).toHaveBeenCalledWith(testUrl);
-    expect(html).toContain(`ok:${testUrl}`);
-    expect(html).toContain(`<img>`);
+    expect(output).toContain(`ok:${testUrl}`);
+    expect(output).toContain(`<img>`);
     expect(map.size).toBe(1);
   });
 
@@ -130,13 +130,13 @@ describe('Fetchoraw (Selectors: default and custom)', () => {
     const fetchoraw = new Fetchoraw(mockResolver);
 
     const htmlIn = `<img src="${testUrl}"><img src="${testUrl}">`;
-    const { html, map } = await fetchoraw.exec(
+    const { output, map } = await fetchoraw.html(
       htmlIn,
       { selectors: [Fetchoraw.SelectorPresets.ImgSrc] }
     );
 
     expect(mockResolver).toHaveBeenCalledTimes(1);
-    expect((html.match(/ok:/g) || []).length).toBe(1);
+    expect((output.match(/ok:/g) || []).length).toBe(2);
     expect(map.size).toBe(1);
     expect(map.get(testUrl)).toBe(`ok:${testUrl}`);
   });
@@ -156,13 +156,13 @@ describe('Fetchoraw (Environment: custom BUILD_FETCH)', () => {
       enableEnvValue: '1',
     });
 
-    const { html, map } = await fetchoraw.exec(
+    const { output, map } = await fetchoraw.html(
       `<img src="${testUrl}">`,
       { selectors: [Fetchoraw.SelectorPresets.ImgSrc] }
     );
 
     expect(mockResolver).toHaveBeenCalledWith(testUrl);
-    expect(html).toContain(`src="custom:${testUrl}"`);
+    expect(output).toContain(`src="custom:${testUrl}"`);
     expect(map.get(testUrl)).toBe(`custom:${testUrl}`);
   });
 
@@ -174,14 +174,14 @@ describe('Fetchoraw (Environment: custom BUILD_FETCH)', () => {
       enableEnvValue: '1',
     });
 
-    const { html, map } = await fetchoraw.exec(
+    const { output, map } = await fetchoraw.html(
       `<img src="${testUrl}">`,
       { selectors: [Fetchoraw.SelectorPresets.ImgSrc] }
     );
 
     expect(mockResolver).not.toHaveBeenCalled();
-    expect(html).toContain(`src="${testUrl}"`);
-    expect(map.get(testUrl)).toBe(testUrl);
+    expect(output).toContain(`src="${testUrl}"`);
+    expect(map.get(testUrl)).toBe(void 0);
   });
 });
 
@@ -199,10 +199,26 @@ describe('Fetchoraw (Exceptional: resolver error)', () => {
     const fetchoraw = new Fetchoraw(mockResolver);
 
     await expect(
-      fetchoraw.exec(
+      fetchoraw.html(
         `<img src="${testUrl}">`,
         { selectors: [Fetchoraw.SelectorPresets.ImgSrc] }
       )
     ).rejects.toThrow('mock resolver error');
+  });
+
+  it('empty attribute -> skips and does not call resolver', async () => {
+    process.env.FETCHORAW_MODE = 'FETCH';
+    const mockResolver = vi.fn(async u => `ok:${u}`);
+    const fetchoraw = new Fetchoraw(mockResolver);
+  
+    const htmlIn = `<img src=""><img>`;
+    const { output, map } = await fetchoraw.html(htmlIn, {
+      selectors: [Fetchoraw.SelectorPresets.ImgSrc]
+    });
+  
+    expect(mockResolver).not.toHaveBeenCalled();
+    expect(output).toContain(`<img src="">`);
+    expect(output).toContain(`<img>`); // no attr at all
+    expect(map.size).toBe(0);
   });
 });
