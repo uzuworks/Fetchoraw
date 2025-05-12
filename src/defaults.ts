@@ -1,4 +1,4 @@
-import { urlSelectors } from './presets';
+import { urlSelectors } from './presets.js';
 
 /**
  * Max size for inlining data URLs (default: 2MB)

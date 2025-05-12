@@ -14,52 +14,78 @@ const banner = `/*!
  */`
 
 export default defineConfig([
-  // lib(esm, cjk)
+  // ESM build
   {
-    input: 'src/index.ts',
-    output: [
-      {
-        file: 'dist/index.mjs',
-        format: 'es',
-        sourcemap: true,
-        banner,
-        plugins: [terser()]
-      },
-      {
-        file: 'dist/index.js',
-        format: 'cjs',
-        sourcemap: true,
-        banner
-      }
+    input: {
+      index: 'src/index.ts',
+    },
+    output: {
+      dir: 'dist',
+      format: 'esm',
+      entryFileNames: '[name].mjs',
+      inlineDynamicImports: true,
+      banner
+    },
+    plugins: [
+      resolve(),
+      json(),
+      commonjs(),
+      typescript({ tsconfig: './tsconfig.json' }),
+      terser()
     ],
-    external: [
-      'fs', 'path', 'url', 'stream', 'buffer', 'util', 'zlib', 'events',
-      'assert', 'tls', 'net', 'http', 'https', 'console', 'worker_threads',
-      'querystring', 'diagnostics_channel', 'perf_hooks', 'async_hooks', 'dns',
-      'cheerio', 'mime'
+    external: []
+  },
+  {
+    input: {
+      'resolvers/index': 'src/resolvers/index.ts'
+    },
+    output: {
+      dir: 'dist',
+      format: 'esm',
+      entryFileNames: '[name].mjs',
+      inlineDynamicImports: true,
+      banner
+    },
+    plugins: [
+      resolve(),
+      json(),
+      commonjs(),
+      typescript({ tsconfig: './tsconfig.json' }),
+      terser()
     ],
-    plugins: [resolve(), json(), commonjs({transformMixedEsModules: true}), typescript({ tsconfig: './tsconfig.json' })],
+    external: []
   },
 
-  // CLI
+  // CLI build
   // {
   //   input: 'src/cli.ts',
   //   output: {
   //     file: 'dist/cli.cjs',
   //     format: 'cjs',
-  //     banner: '#!/usr/bin/env node\n' + banner,
+  //     banner: '#!/usr/bin/env node\n' + banner
   //   },
-  //   plugins: [resolve(), json(), commonjs(), typescript({ tsconfig: './tsconfig.json' })],
-  //   external: [],
+  //   plugins: [
+  //     resolve(),
+  //     json(),
+  //     commonjs(),
+  //     typescript({ tsconfig: './tsconfig.json' })
+  //   ],
+  //   external: []
   // },
 
-  // .d.ts
+  // Types
   {
-    input: 'src/index.ts',
+    input: {
+      index: 'src/index.ts',
+      'resolvers/index': 'src/resolvers/index.ts'
+    },
     output: {
-      file: 'dist/index.d.ts',
-      format: 'es',
+      dir: 'dist',
+      format: 'esm',
+      entryFileNames: '[name].d.ts',
+      preserveModules: false,
     },
     plugins: [dts()],
   },
+
 ])

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createDataUrlResolver } from '../src/resolvers/basicDataUrlResolver';
+import { createDataUrlResolver } from '../../src/resolvers/basicDataUrlResolver';
 
 describe('createDataUrlResolver (size rules)', () => {
   beforeEach(() => {

@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "moduleResolution": "nodenext",
+    "outDir": "types/index",
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "include": ["src/index.ts"],
+  "exclude": ["node_modules", "dist", "src/resolvers"]
+}

@@ -1,14 +1,14 @@
 import { Buffer } from 'buffer';
 import { extname } from 'path';
 import mime from 'mime';
-import type { DataUrlResolverOptions } from '../types';
+import type { DataUrlResolverOptions } from '../types.js';
 import {
   DEFAULT_INLINE_LIMIT,
   DEFAULT_TARGET_PATTERN,
   DEFAULT_ALLOW_MIME_TYPES,
   DENY_ALWAYS_MIME_TYPES,
   DEFAULT_ON_ERROR,
-} from '../defaults';
+} from '../defaults.js';
 
 /**
  * Create a resolver that inlines assets as data URLs.
@@ -65,8 +65,10 @@ export function createDataUrlResolver(options: DataUrlResolverOptions = {}) {
       }
   
       const base64 = buffer.toString('base64');
+      console.log(`Inlined: ${url} (${buffer.length} bytes)`);
       return `data:${contentType};base64,${base64}`;
     } catch (error) {
+      console.warn(`Error inlining: ${url} (${(error as Error).message})`);
       if (onError === 'return-empty') return '';
       if (onError === 'return-url') return url;
 

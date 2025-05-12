@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Fetchoraw } from '../src/index';
-import { createFileSaveResolver } from '../src/resolvers/basicFileSaveResolver';
+import { Fetchoraw } from '../../src/index';
+import { createFileSaveResolver } from '../../src/resolvers/basicFileSaveResolver';
 
 // Mock fs/promises
 vi.mock('fs/promises', async () => ({
@@ -32,7 +32,7 @@ describe('Fetchoraw FT (fileSaveResolver)', () => {
       const fetchoraw = new Fetchoraw(resolver, { envModeName: '' });
 
       const inputHtml = `<html><body><img src="https://example.com/images/a.png"></body></html>`;
-      const { html, map } = await fetchoraw.exec(inputHtml, {
+      const { output: html, map } = await fetchoraw.html(inputHtml, {
         selectors: [{ selector: 'img[src]', attr: 'src' }],
       });
 
@@ -55,7 +55,7 @@ describe('Fetchoraw FT (fileSaveResolver)', () => {
       const inputUrl = 'https://cdn.example.com/dir space/日本語/file @2x.png';
       const inputHtml = `<html><body><img src="${inputUrl}"></body></html>`;
 
-      const { html, map } = await fetchoraw.exec(inputHtml, {
+      const { output: html, map } = await fetchoraw.html(inputHtml, {
         selectors: [{ selector: 'img[src]', attr: 'src' }],
       });
 
