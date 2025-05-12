@@ -1,11 +1,12 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "nodenext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "types/index",
     "declaration": true,
     "emitDeclarationOnly": true
   },
-  "include": ["src/index.ts"],
-  "exclude": ["node_modules", "dist", "src/resolvers"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "src/resolvers", "src/futures"]
 }

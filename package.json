@@ -1,6 +1,6 @@
 {
   "name": "fetchoraw-repo",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A simple resolver-based URL transformer for Astro and CMS-driven projects.",
   "private": true,
   "repository": {
@@ -17,10 +17,11 @@
     "dev": "vite watch & vite watch --config vite.config.resolvers.ts",
     "build": "trash dist/ && vite build && vite build --config vite.config.resolvers.ts && node build/package.mjs",
     "build:cli": "trash dist/cli/ && vite build --config vite.config.cli.ts",
+    "ts": "tsc --project tsconfig.index.json --noEmit && tsc --project tsconfig.resolvers.json --noEmit",
     "pw": "playwright test",
     "ut": "vitest run",
     "ut:watch": "vitest",
-    "test": "npm run ut && npm run pw",
+    "test": "npm run ts && npm run ut && npm run pw",
     "prepublishOnly": "npm run build && npm test",
     "publish": "npm run build && npm publish ./dist --access public"
   },
