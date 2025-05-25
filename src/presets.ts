@@ -6,7 +6,7 @@ export const cmsUrls = {
   microcms: /^https?:\/\/images\.microcms-assets\.io\/assets\//,
 
   /** Base URL pattern for Newt assets */
-  newt: /^https?:\/\/assets\.newt\.so\//,
+  newt: /^https?:\/\/.*?\.assets\.newt\.so\//,
 
   /** Base URL pattern for Contentful assets */
   contentful: /^https?:\/\/images\.ctfassets\.net\//,
