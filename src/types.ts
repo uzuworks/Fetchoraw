@@ -1,4 +1,10 @@
-export type ResolverResult = string | { path: string, data?: unknown };
+/**
+ * Standard result format for structured asset resolvers.
+ *
+ * - `path` is the resolved output path (e.g. local file path or public URL)
+ * - `data` holds parsed or structured content (e.g. JSON, text, metadata)
+ */
+export type ResolverResult = { path: string, data?: unknown };
 
 /**
  * Resolves a URL into a string or an object with a path and optional data.
@@ -10,7 +16,7 @@ export type ResolverResult = string | { path: string, data?: unknown };
  * @param options - Optional fetch options.
  * @returns A resolved string or an object with `path` and optional `data`.
  */
-export type ResolveAssetFn<T = ResolverResult> = (
+export type ResolveAssetFn<T = string | ResolverResult> = (
   url: string,
   options?: RequestInit
 ) => Promise<T>;
