@@ -23,7 +23,7 @@ import {
  * @param options.onError - error handling mode (default: "throw")
  * @returns function to resolve a URL
  */
-export function createImageDataUrlResolver(options: ImageDataUrlResolverOptions = {}): ResolveAssetFn {
+export function createImageDataUrlResolver(options: ImageDataUrlResolverOptions = {}): ResolveAssetFn<string> {
   const {
     inlineLimitBytes = DEFAULT_INLINE_LIMIT,
     allowMimeTypes = DEFAULT_ALLOW_MIME_TYPES,

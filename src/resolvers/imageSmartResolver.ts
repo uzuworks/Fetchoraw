@@ -1,4 +1,4 @@
-import type { ImageSmartResolverOptions } from '../types.js';
+import type { ImageSmartResolverOptions, ResolveAssetFn, ResolverResult } from '../types.js';
 import {
   DEFAULT_TARGET_PATTERN,
   DEFAULT_INLINE_LIMIT,
@@ -28,7 +28,7 @@ import { createImageFileSaveResolver } from './imageFileSaveResolver.js';
  * @param options.onError - error handling mode (default: "throw")
  * @returns function to resolve a URL
  */
-export function createImageSmartResolver(options: ImageSmartResolverOptions) {
+export function createImageSmartResolver(options: ImageSmartResolverOptions): ResolveAssetFn<string> {
   const {
     requireFilePatterns = [],
     targetPattern = DEFAULT_TARGET_PATTERN,
@@ -58,12 +58,12 @@ export function createImageSmartResolver(options: ImageSmartResolverOptions) {
     onError,
   });
 
-  return async function resolve(url: string): Promise<string> {
+  return async function resolve(url: string, options: RequestInit = {}): Promise<string> {
     if (!patterns.some(rx => rx.test(url))) return url;
 
     if (requirePatterns.some(rx => rx.test(url))) {
       try {
-        return await fileSaveResolver(url);
+        return await fileSaveResolver(url, options);
       } catch (error) {
         if (onError === 'return-url') return url;
         if (onError === 'return-empty') return '';
@@ -72,10 +72,10 @@ export function createImageSmartResolver(options: ImageSmartResolverOptions) {
     }
 
     try {
-      return await dataUrlResolver(url);
+      return await dataUrlResolver(url, options);
     } catch (dataurlError) {
       try {
-        return await fileSaveResolver(url);
+        return await fileSaveResolver(url, options);
       } catch (filesaveError) {
         if (onError === 'return-url') return url;
         if (onError === 'return-empty') return '';

@@ -24,7 +24,7 @@ import {
  * @param options.onError - error handling mode (default: "throw")
  * @returns function to resolve a URL
  */
-export function createImageFileSaveResolver(options: ImageFileSaveResolverOptions = {}): ResolveAssetFn {
+export function createImageFileSaveResolver(options: ImageFileSaveResolverOptions = {}): ResolveAssetFn<string> {
   const {
     saveRoot = DEFAULT_SAVE_ROOT,
     targetPattern = DEFAULT_TARGET_PATTERN,
