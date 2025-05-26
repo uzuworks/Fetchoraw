@@ -116,3 +116,12 @@ export interface ImageSmartResolverOptions extends ImageDataUrlResolverOptions, 
   /** Patterns that force file saving */
   requireFilePatterns?: RegExp | RegExp[];
 }
+
+export interface JsonFileSaveResolverOptions extends CommonResolverOptions {
+  /** Directory to save files (default: public/media) */
+  saveRoot?: string;
+  /** Pattern or string to build relative paths */
+  keyString?: string | RegExp;
+  /** Prefix path to add to saved URL */
+  prependPath?: string;
+}
