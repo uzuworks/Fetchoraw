@@ -1,4 +1,4 @@
-import type { SmartResolverOptions } from '../types.js';
+import type { ImageSmartResolverOptions } from '../types.js';
 import {
   DEFAULT_TARGET_PATTERN,
   DEFAULT_INLINE_LIMIT,
@@ -8,8 +8,8 @@ import {
   DEFAULT_ON_ERROR
 } from '../defaults.js';
 
-import { createDataUrlResolver } from './basicDataUrlResolver.js';
-import { createFileSaveResolver } from './basicFileSaveResolver.js';
+import { createImageDataUrlResolver } from './imageDataUrlResolver.js';
+import { createImageFileSaveResolver } from './imageFileSaveResolver.js';
 
 /**
  * Create a smart resolver that tries data URL first, then file save.
@@ -28,7 +28,7 @@ import { createFileSaveResolver } from './basicFileSaveResolver.js';
  * @param options.onError - error handling mode (default: "throw")
  * @returns function to resolve a URL
  */
-export function createSmartResolver(options: SmartResolverOptions) {
+export function createImageSmartResolver(options: ImageSmartResolverOptions) {
   const {
     requireFilePatterns = [],
     targetPattern = DEFAULT_TARGET_PATTERN,
@@ -43,14 +43,14 @@ export function createSmartResolver(options: SmartResolverOptions) {
   const patterns = Array.isArray(targetPattern) ? targetPattern : [targetPattern];
   const requirePatterns = Array.isArray(requireFilePatterns) ? requireFilePatterns : [requireFilePatterns];
 
-  const dataUrlResolver = createDataUrlResolver({
+  const dataUrlResolver = createImageDataUrlResolver({
     targetPattern,
     inlineLimitBytes,
     allowMimeTypes,
     onError,
   });
 
-  const fileSaveResolver = createFileSaveResolver({
+  const fileSaveResolver = createImageFileSaveResolver({
     saveRoot,
     keyString,
     prependPath,
@@ -84,3 +84,5 @@ export function createSmartResolver(options: SmartResolverOptions) {
     }
   };
 }
+
+const imageSmart = createImageSmartResolver;

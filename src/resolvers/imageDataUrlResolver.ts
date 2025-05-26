@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { extname } from 'path';
 import mime from 'mime';
-import type { DataUrlResolverOptions } from '../types.js';
+import type { ImageDataUrlResolverOptions, ResolveAssetFn } from '../types.js';
 import {
   DEFAULT_INLINE_LIMIT,
   DEFAULT_TARGET_PATTERN,
@@ -23,7 +23,7 @@ import {
  * @param options.onError - error handling mode (default: "throw")
  * @returns function to resolve a URL
  */
-export function createDataUrlResolver(options: DataUrlResolverOptions = {}) {
+export function createImageDataUrlResolver(options: ImageDataUrlResolverOptions = {}): ResolveAssetFn {
   const {
     inlineLimitBytes = DEFAULT_INLINE_LIMIT,
     allowMimeTypes = DEFAULT_ALLOW_MIME_TYPES,
@@ -33,12 +33,12 @@ export function createDataUrlResolver(options: DataUrlResolverOptions = {}) {
 
   const patterns = Array.isArray(targetPattern) ? targetPattern : [targetPattern];
 
-  return async function resolve(url: string): Promise<string> {
+  return async function resolve(url: string, options: RequestInit = {}): Promise<string> {
     if (url.trim().toLowerCase().startsWith('javascript:')) return url;
     if (!patterns.some(rx => rx.test(url))) return url;
 
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, options);
       if (!res.ok) {
         throw new Error(`Failed to fetch: ${url} (status ${res.status})`);
       }
@@ -77,3 +77,5 @@ export function createDataUrlResolver(options: DataUrlResolverOptions = {}) {
 
   };
 }
+
+export const imageDataUrl = createImageDataUrlResolver;

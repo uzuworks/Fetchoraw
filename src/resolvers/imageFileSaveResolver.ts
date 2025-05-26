@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { mkdir, writeFile } from 'fs/promises';
 import { basename, dirname, extname, join, normalize } from 'path';
-import type { FileSaveResolverOptions } from '../types.js';
+import type { ImageFileSaveResolverOptions, ResolveAssetFn } from '../types.js';
 import {
   DEFAULT_SAVE_ROOT,
   DEFAULT_TARGET_PATTERN,
@@ -24,7 +24,7 @@ import {
  * @param options.onError - error handling mode (default: "throw")
  * @returns function to resolve a URL
  */
-export function createFileSaveResolver(options: FileSaveResolverOptions = {}) {
+export function createImageFileSaveResolver(options: ImageFileSaveResolverOptions = {}): ResolveAssetFn {
   const {
     saveRoot = DEFAULT_SAVE_ROOT,
     targetPattern = DEFAULT_TARGET_PATTERN,
@@ -35,12 +35,12 @@ export function createFileSaveResolver(options: FileSaveResolverOptions = {}) {
 
   const patterns = Array.isArray(targetPattern) ? targetPattern : [targetPattern];
 
-  return async function resolve(url: string): Promise<string> {
+  return async function resolve(url: string, options: RequestInit = {}): Promise<string> {
     if (url.trim().toLowerCase().startsWith('javascript:')) return url;
     if (!patterns.some(rx => rx.test(url))) return url;
 
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, options);
       if (!res.ok) {
         throw new Error(`Failed to fetch: ${url} (status ${res.status})`);
       }
@@ -69,3 +69,5 @@ export function createFileSaveResolver(options: FileSaveResolverOptions = {}) {
     }
   };
 }
+
+export const imageFileSave = createImageFileSaveResolver;

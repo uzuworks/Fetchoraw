@@ -1,4 +1,4 @@
 // src/resolvers/index.ts
-export * from './basicDataUrlResolver.js';
-export * from './basicFileSaveResolver.js';
-export * from './smartResolver.js';
+export * from './imageDataUrlResolver.js';
+export * from './imageFileSaveResolver.js';
+export * from './imageSmartResolver.js';

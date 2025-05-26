@@ -1,8 +1,12 @@
 /**
  * Function to transform a URL.
  * (e.g., make a data URL or a local file path)
+ *
+ * @param url - The target URL to resolve.
+ * @param options - Optional fetch options such as method, headers, body, etc.
+ * @returns A transformed string representing either a local path or a data URI.
  */
-export type ResolveAssetFn = (url: string) => Promise<string>;
+export type ResolveAssetFn = (url: string, options?: RequestInit) => Promise<string>;
 
 /**
  * Error handling modes.
@@ -54,7 +58,7 @@ export interface CommonResolverOptions {
 /**
  * Options for creating a data URL resolver.
  */
-export interface DataUrlResolverOptions extends CommonResolverOptions {
+export interface ImageDataUrlResolverOptions extends CommonResolverOptions {
   /** Max size to inline (bytes) (default: 2MB) */
   inlineLimitBytes?: number;
   /** Allowed MIME types to inline */
@@ -64,7 +68,7 @@ export interface DataUrlResolverOptions extends CommonResolverOptions {
 /**
  * Options for creating a file-save resolver.
  */
-export interface FileSaveResolverOptions extends CommonResolverOptions {
+export interface ImageFileSaveResolverOptions extends CommonResolverOptions {
   /** Directory to save files (default: public/media) */
   saveRoot?: string;
   /** Pattern or string to build relative paths */
@@ -76,7 +80,7 @@ export interface FileSaveResolverOptions extends CommonResolverOptions {
 /**
  * Options for smart resolver (data URL + file-save).
  */
-export interface SmartResolverOptions extends DataUrlResolverOptions, FileSaveResolverOptions {
+export interface ImageSmartResolverOptions extends ImageDataUrlResolverOptions, ImageFileSaveResolverOptions {
   /** Patterns that force file saving */
   requireFilePatterns?: RegExp | RegExp[];
 }

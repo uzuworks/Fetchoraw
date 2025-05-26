@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Fetchoraw } from '../../src/index';
-import { createFileSaveResolver } from '../../src/resolvers/basicFileSaveResolver';
+import { createImageFileSaveResolver } from '../../src/resolvers/imageFileSaveResolver';
 
 // Mock fs/promises
 vi.mock('fs/promises', async () => ({
@@ -22,7 +22,7 @@ describe('Fetchoraw FT (fileSaveResolver)', () => {
 
   describe('Normal config (default settings)', () => {
     it('rewrites img[src] to /assets path', async () => {
-      const resolver = createFileSaveResolver({
+      const resolver = createImageFileSaveResolver({
         saveRoot: 'dist/assets',
         prependPath: 'assets',
         targetPattern: /^https?:\/\/[^\/]+\/?/,
@@ -43,7 +43,7 @@ describe('Fetchoraw FT (fileSaveResolver)', () => {
 
   describe('Custom config (saveRoot and prependPath customized)', () => {
     it('rewrites img[src] to customized /static path with multibyte support', async () => {
-      const resolver = createFileSaveResolver({
+      const resolver = createImageFileSaveResolver({
         saveRoot: 'out/assets',
         prependPath: 'static',
         targetPattern: /^https?:\/\/[^\/]+\/?/,
