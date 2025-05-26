@@ -1,12 +1,17 @@
 /**
- * Function to transform a URL.
- * (e.g., make a data URL or a local file path)
+ * Resolves a URL into a string or an object with a path and optional data.
+ *
+ * - Returns a string for simple assets (e.g. data URL or local path)
+ * - Returns `{ path, data }` for structured assets (e.g. JSON)
  *
  * @param url - The target URL to resolve.
- * @param options - Optional fetch options such as method, headers, body, etc.
- * @returns A transformed string representing either a local path or a data URI.
+ * @param options - Optional fetch options.
+ * @returns A resolved string or an object with `path` and optional `data`.
  */
-export type ResolveAssetFn = (url: string, options?: RequestInit) => Promise<string>;
+export type ResolveAssetFn = (
+  url: string,
+  options?: RequestInit
+) => Promise<string | { path: string, data?: unknown }>;
 
 /**
  * Error handling modes.
@@ -36,13 +41,32 @@ export interface Selector {
 }
 
 /**
- * Result of exec().
+ * Result base.
  */
-export interface ExecResult {
-  /** Rewritten HTML string */
-  html: string;
+export interface FetchorawResultBase{
   /** Map of original -> resolved URLs */
   map: Map<string, string>;
+}
+
+/**
+ * Result of html().
+ */
+export interface FetchorawHtmlResult extends FetchorawResultBase {
+  /** Rewritten HTML string */
+  html: string;
+}
+
+/**
+ * Result of url().
+ */
+export interface FetchorawUrlResult extends FetchorawResultBase {
+  /** Rewritten path string */
+  path: string;
+  /**
+   * Optional parsed or resolved content.
+   * e.g. JSON object, extracted text, metadata, etc.
+   */
+  data?: unknown;
 }
 
 /**

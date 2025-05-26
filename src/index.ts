@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import type { ResolveAssetFn, FetchorawOptions, Selector } from './types.js';
+import type { ResolveAssetFn, FetchorawOptions, Selector, FetchorawUrlResult, FetchorawHtmlResult } from './types.js';
 import {
   DEFAULT_ENV_NAME,
   DEFAULT_ENABLE_ENV_VALUE,
@@ -49,9 +49,9 @@ export class Fetchoraw {
    * @param inputHtml - HTML string
    * @param config - optional target selectors
    * @param config.selectors - list of { selector, attr } to target (default: DEFAULT_SELECTORS)
-   * @returns { output, map }
+   * @returns { html, map }
    */
-  async html(inputHtml: string, config?: { selectors?: Selector[] }): Promise<{ output: string; map: Map<string, string> }> {
+  async html(inputHtml: string, config?: { selectors?: Selector[] }): Promise<FetchorawHtmlResult> {
     const map = new Map<string, string>();
 
     //@ts-ignore
@@ -59,7 +59,7 @@ export class Fetchoraw {
     const isResolveTarget = this.envModeName.length === 0 || envValue === this.enableEnvValue;
     console.log('Resolve?: ', isResolveTarget);
     if(!isResolveTarget){
-      return { output: inputHtml, map };
+      return { html: inputHtml, map };
     }
 
     const targetSelectors = config?.selectors ?? Fetchoraw.defaults.DEFAULT_SELECTORS;
@@ -77,10 +77,11 @@ export class Fetchoraw {
         }else{
           try {
             const resolved = await this.resolver(original);
-            map.set(original, resolved);
-            this.urlMap.set(original, resolved);
+            const resolvedPath = typeof resolved === 'string' ? resolved : resolved.path;
 
-            $(el).attr(attr, resolved);
+            map.set(original, resolvedPath);
+            this.urlMap.set(original, resolvedPath);
+            $(el).attr(attr, resolvedPath);
           } catch (error) {
             console.error(`${original} error: `, error);
             throw error;
@@ -90,7 +91,7 @@ export class Fetchoraw {
       }
     }
 
-    return { output: $.html(), map };
+    return { html: $.html(), map };
   }
 
   /**
@@ -98,18 +99,18 @@ export class Fetchoraw {
    *
    * @param inputUrl - The URL to resolve.
    * @param origin - Optional origin to resolve relative paths.
-   * @returns { output, map } - Resolved URL and mapping.
+   * @returns { path, map } - Resolved URL and mapping.
    */
-  async url(inputUrl: string, origin: string = ''): Promise<{ output: string; map: Map<string, string> }> {
+  async url(inputUrl: string, origin: string = ''): Promise<FetchorawUrlResult> {
     const map = new Map<string, string>();
 
     if(!inputUrl){
-      return { output: inputUrl, map };
+      return { path: inputUrl, map };
     }
 
     const isResolveTarget = this.envModeName.length === 0 || process.env[this.envModeName] === this.enableEnvValue;
     if(!isResolveTarget){
-      return { output: inputUrl, map };
+      return { path: inputUrl, map };
     }
 
     try {
@@ -130,18 +131,20 @@ export class Fetchoraw {
       const url = new URL(modifiedInput);
       if(this.urlMap.has(url.href)){
         return {
-          output: this.urlMap.get(url.href)!,
+          path: this.urlMap.get(url.href)!,
           map
         }
       }
 
       const resolved = await this.resolver(url.href);
-      map.set(url.href, resolved);
-      this.urlMap.set(url.href, resolved);
+      const resolvedPath = typeof resolved === 'string' ? resolved : resolved.path;
+      map.set(url.href, resolvedPath);
+      this.urlMap.set(url.href, resolvedPath);
 
       return {
-        output: resolved,
-        map
+        path: resolvedPath,
+        map,
+        ...((typeof resolved !== 'string') ? { data: resolved.data } : {})
       }
     } catch (error) {
       console.error(`${inputUrl} error: `, error);

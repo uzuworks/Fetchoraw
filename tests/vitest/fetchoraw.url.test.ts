@@ -14,30 +14,30 @@ describe('Fetchoraw.url()', () => {
   it('absolute URL + FETCHORAW_MODE active -> resolves via resolver', async () => {
     process.env.FETCHORAW_MODE = 'FETCH';
     const fetchoraw = new Fetchoraw(mockResolver);
-    const { output } = await fetchoraw.url(testUrl);
-    expect(output).toBe(`resolved:${testUrl}`);
+    const { path } = await fetchoraw.url(testUrl);
+    expect(path).toBe(`resolved:${testUrl}`);
     expect(mockResolver).toHaveBeenCalledWith(testUrl);
   });
 
   it('FETCHORAW_MODE unset -> skips resolution & returns input', async () => {
     const fetchoraw = new Fetchoraw(mockResolver);
-    const { output } = await fetchoraw.url(testUrl);
-    expect(output).toBe(testUrl);
+    const { path } = await fetchoraw.url(testUrl);
+    expect(path).toBe(testUrl);
     expect(mockResolver).not.toHaveBeenCalled();
   });
 
   it('relative URL with origin -> resolves to absolute URL', async () => {
     process.env.FETCHORAW_MODE = 'FETCH';
     const fetchoraw = new Fetchoraw(mockResolver);
-    const { output } = await fetchoraw.url('/a/b.png', 'https://site.com');
-    expect(output).toBe('resolved:https://site.com/a/b.png');
+    const { path } = await fetchoraw.url('/a/b.png', 'https://site.com');
+    expect(path).toBe('resolved:https://site.com/a/b.png');
   });
 
   it('protocol-relative URL -> prepends https:// and resolves', async () => {
     process.env.FETCHORAW_MODE = 'FETCH';
     const fetchoraw = new Fetchoraw(mockResolver);
-    const { output } = await fetchoraw.url('//cdn.com/x.jpg');
-    expect(output).toBe('resolved:https://cdn.com/x.jpg');
+    const { path } = await fetchoraw.url('//cdn.com/x.jpg');
+    expect(path).toBe('resolved:https://cdn.com/x.jpg');
   });
 
   it('same URL used twice -> reuses cached value (no re-resolution)', async () => {
@@ -60,9 +60,9 @@ describe('Fetchoraw.url()', () => {
     const mockResolver = vi.fn();
     const fetchoraw = new Fetchoraw(mockResolver);
   
-    const { output, map } = await fetchoraw.url('');
+    const { path, map } = await fetchoraw.url('');
   
-    expect(output).toBe('');
+    expect(path).toBe('');
     expect(map.size).toBe(0);
     expect(mockResolver).not.toHaveBeenCalled();
   });

@@ -18,18 +18,18 @@ test('install tarball and import Fetchoraw', async () => {
   const entry = path.join(tmp, 'test-import.mjs')
   fs.writeFileSync(entry, `
     import { Fetchoraw } from 'fetchoraw'
-    import { createFileSaveResolver } from 'fetchoraw/resolvers'
+    import { createImageFileSaveResolver } from 'fetchoraw/resolvers'
     import fs from 'node:fs'
     import path from 'node:path'
 
-    const f = new Fetchoraw(createFileSaveResolver({ saveRoot: './saved' }))
+    const f = new Fetchoraw(createImageFileSaveResolver({ saveRoot: './saved' }))
 
     const input = '<img src="https://img.shields.io/badge/fetchoraw-tested-brightgreen.svg">'
     const result = await f.html(input)
 
     console.log('[e2e_js] Result HTML:', result)
 
-    const match = result.output.match(/src="(.*?)"/)
+    const match = result.html.match(/src="(.*?)"/)
     if (!match) throw new Error('No rewritten src found')
     const rewrittenUrl = match[1]
     const filePath = path.join(process.cwd(), 'saved', rewrittenUrl.replace('\/assets', ''))
