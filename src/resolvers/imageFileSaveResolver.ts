@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { mkdir, writeFile } from 'fs/promises';
 import { basename, dirname, extname, join, normalize } from 'path';
-import type { ImageFileSaveResolverOptions, ResolveAssetFn } from '../types.js';
+import type { FileSaveResolverOptions, ResolveAssetFn } from '../types.js';
 import {
   DEFAULT_SAVE_ROOT,
   DEFAULT_TARGET_PATTERN,
@@ -25,7 +25,7 @@ import { onErrorHandler } from '../utils.js';
  * @param options.onError - error handling mode (default: "throw")
  * @returns function to resolve a URL
  */
-export function createImageFileSaveResolver(options: ImageFileSaveResolverOptions = {}): ResolveAssetFn<string> {
+export function createImageFileSaveResolver(options: FileSaveResolverOptions = {}): ResolveAssetFn<string> {
   const {
     saveRoot = DEFAULT_SAVE_ROOT,
     targetPattern = DEFAULT_TARGET_PATTERN,

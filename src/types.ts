@@ -100,7 +100,7 @@ export interface ImageDataUrlResolverOptions extends CommonResolverOptions {
 /**
  * Options for creating a file-save resolver.
  */
-export interface ImageFileSaveResolverOptions extends CommonResolverOptions {
+export interface FileSaveResolverOptions extends CommonResolverOptions {
   /** Directory to save files (default: public/media) */
   saveRoot?: string;
   /** Pattern or string to build relative paths */
@@ -112,16 +112,7 @@ export interface ImageFileSaveResolverOptions extends CommonResolverOptions {
 /**
  * Options for smart resolver (data URL + file-save).
  */
-export interface ImageSmartResolverOptions extends ImageDataUrlResolverOptions, ImageFileSaveResolverOptions {
+export interface ImageSmartResolverOptions extends ImageDataUrlResolverOptions, FileSaveResolverOptions {
   /** Patterns that force file saving */
   requireFilePatterns?: RegExp | RegExp[];
-}
-
-export interface JsonFileSaveResolverOptions extends CommonResolverOptions {
-  /** Directory to save files (default: public/media) */
-  saveRoot?: string;
-  /** Pattern or string to build relative paths */
-  keyString?: string | RegExp;
-  /** Prefix path to add to saved URL */
-  prependPath?: string;
 }

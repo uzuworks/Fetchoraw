@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { mkdir, writeFile } from 'fs/promises';
 import { basename, dirname, extname, join, normalize } from 'path';
-import type { JsonFileSaveResolverOptions, ResolveAssetFn, ResolverResult } from "../types";
+import type { FileSaveResolverOptions, ResolveAssetFn, ResolverResult } from "../types";
 import {
   DEFAULT_SAVE_ROOT,
   DEFAULT_TARGET_PATTERN,
@@ -11,7 +11,22 @@ import {
 } from '../defaults.js';
 import { onErrorHandler } from '../utils';
 
-export function createJsonFileSaveResolver(options: JsonFileSaveResolverOptions = {}): ResolveAssetFn<ResolverResult> {
+/**
+ * Create a resolver that fetches JSON from a remote API and saves it as a local file.
+ *
+ * If URL matches targetPattern, download and save it,
+ * then return the local public path.
+ * Returns an object including both the saved `path` and parsed `data`.
+ *
+ * @param options - resolver settings
+ * @param options.saveRoot - root folder to save files (default: "dist/assets")
+ * @param options.keyString - prefix to strip from URL paths
+ * @param options.prependPath - path prefix for returned URL (default: "assets")
+ * @param options.targetPattern - URL patterns to match
+ * @param options.onError - error handling mode (default: "throw")
+ * @returns function to resolve a URL
+ */
+export function createJsonFileSaveResolver(options: FileSaveResolverOptions = {}): ResolveAssetFn<ResolverResult> {
   const {
     saveRoot = DEFAULT_SAVE_ROOT,
     targetPattern = DEFAULT_TARGET_PATTERN,
