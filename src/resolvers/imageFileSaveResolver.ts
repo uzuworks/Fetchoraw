@@ -9,6 +9,7 @@ import {
   DEFAULT_PREPEND_PATH,
   DEFAULT_ON_ERROR,
 } from '../defaults.js';
+import { onErrorHandler } from '../utils.js';
 
 /**
  * Create a resolver that saves assets to local files.
@@ -62,10 +63,7 @@ export function createImageFileSaveResolver(options: ImageFileSaveResolverOption
 
       return '/' + join(prependPath, normalizedPath).replace(/^\/+/g, '');
     } catch (error) {
-      console.warn(`Error saving: ${url} (${(error as Error).message})`);
-      if (onError === 'return-empty') return '';
-      if (onError === 'return-url') return url;
-      throw error;
+      return onErrorHandler<string>(error, onError, url, '');
     }
   };
 }

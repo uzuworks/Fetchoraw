@@ -9,6 +9,7 @@ import {
   DEFAULT_PREPEND_PATH,
   DEFAULT_ON_ERROR,
 } from '../defaults.js';
+import { onErrorHandler } from '../utils';
 
 export function createJsonFileSaveResolver(options: JsonFileSaveResolverOptions = {}): ResolveAssetFn<ResolverResult> {
   const {
@@ -48,9 +49,7 @@ export function createJsonFileSaveResolver(options: JsonFileSaveResolverOptions 
         data: jsonData
       } 
     } catch (error) {
-      if (onError === 'return-url') return { path: url };
-      if (onError === 'return-empty') return { path: '' };
-      throw error;
+      return onErrorHandler<ResolverResult>(error, onError, { path: url }, { path: '' });
     }
   }
 }

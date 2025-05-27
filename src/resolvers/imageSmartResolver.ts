@@ -10,6 +10,7 @@ import {
 
 import { createImageDataUrlResolver } from './imageDataUrlResolver.js';
 import { createImageFileSaveResolver } from './imageFileSaveResolver.js';
+import { onErrorHandler } from '../utils.js';
 
 /**
  * Create a smart resolver that tries data URL first, then file save.
@@ -65,9 +66,7 @@ export function createImageSmartResolver(options: ImageSmartResolverOptions): Re
       try {
         return await fileSaveResolver(url, options);
       } catch (error) {
-        if (onError === 'return-url') return url;
-        if (onError === 'return-empty') return '';
-        throw error;
+        return onErrorHandler<string>(error, onError, url, '');
       }
     }
 
@@ -77,9 +76,7 @@ export function createImageSmartResolver(options: ImageSmartResolverOptions): Re
       try {
         return await fileSaveResolver(url, options);
       } catch (filesaveError) {
-        if (onError === 'return-url') return url;
-        if (onError === 'return-empty') return '';
-        throw filesaveError;
+        return onErrorHandler<string>(filesaveError, onError, url, '');
       }
     }
   };

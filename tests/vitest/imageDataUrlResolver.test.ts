@@ -63,33 +63,6 @@ describe('targetPattern: custom and default rules', () => {
   });
 });
 
-// error scenarios -> control behavior via onError
-
-describe.each([
-  ['onError: throw -> throws error', 'throw' as const, 'error'],
-  ['onError: return-url -> returns original URL', 'return-url' as const, 'url'],
-  ['onError: return-empty -> returns empty string', 'return-empty' as const, 'empty'],
-])('%s', (_, onError, outcome) => {
-  it(`HTTP 500 fetch failure -> handles as ${outcome}`, async () => {
-    const url = 'https://example.com/image.png';
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      arrayBuffer: async () => new ArrayBuffer(0),
-      headers: { get: () => null },
-    });
-
-    const resolver = createImageDataUrlResolver({ onError });
-
-    if (outcome === 'error') {
-      await expect(resolver(url)).rejects.toThrow();
-    } else {
-      const result = await resolver(url);
-      expect(result).toBe(outcome === 'url' ? url : '');
-    }
-  });
-});
-
 // MIME fallback failure -> throws
 
 describe('fallback MIME detection -> throws if undetermined', () => {

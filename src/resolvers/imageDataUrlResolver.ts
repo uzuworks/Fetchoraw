@@ -9,6 +9,7 @@ import {
   DENY_ALWAYS_MIME_TYPES,
   DEFAULT_ON_ERROR,
 } from '../defaults.js';
+import { onErrorHandler } from '../utils.js';
 
 /**
  * Create a resolver that inlines assets as data URLs.
@@ -68,11 +69,7 @@ export function createImageDataUrlResolver(options: ImageDataUrlResolverOptions 
       console.log(`Inlined: ${url} (${buffer.length} bytes)`);
       return `data:${contentType};base64,${base64}`;
     } catch (error) {
-      console.warn(`Error inlining: ${url} (${(error as Error).message})`);
-      if (onError === 'return-empty') return '';
-      if (onError === 'return-url') return url;
-
-      throw error;
+      return onErrorHandler<string>(error, onError, url, '');
     }
 
   };

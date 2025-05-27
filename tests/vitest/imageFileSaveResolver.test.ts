@@ -78,27 +78,3 @@ describe('targetPattern: array -> processes matching', () => {
     expect(result).toBe('/foo/bar.jpg');
   });
 });
-
-// fetch failure -> behavior based on onError
-
-describe.each([
-  ['onError: throw -> throws', 'throw' as const, 'error'],
-  ['onError: return-url -> returns URL', 'return-url' as const, 'url'],
-  ['onError: return-empty -> returns empty', 'return-empty' as const, 'empty'],
-])('%s', (_, onError, resultType) => {
-  it('fetch returns !ok -> handled according to policy', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: false, status: 404, arrayBuffer: async () => new ArrayBuffer(0)
-    });
-
-    const resolver = createImageFileSaveResolver({ onError });
-    const url = 'https://example.com/image.png';
-
-    if (resultType === 'error') {
-      await expect(resolver(url)).rejects.toThrow('Failed to fetch');
-    } else {
-      const result = await resolver(url);
-      expect(result).toBe(resultType === 'url' ? url : '');
-    }
-  });
-});

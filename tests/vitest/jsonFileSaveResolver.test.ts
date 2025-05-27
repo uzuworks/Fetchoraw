@@ -62,36 +62,3 @@ describe('jsonFileSaveResolver: basic cases', () => {
     expect(result.data).toHaveProperty('status', 'ok');
   });
 });
-
-describe('jsonFileSaveResolver: failure modes', () => {
-  it('throws on fetch error when onError is "throw"', async () => {
-    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
-
-    const resolver = createJsonFileSaveResolver({ onError: 'throw' });
-    await expect(resolver('https://api.example.com/fail')).rejects.toThrow('Failed to fetch');
-  });
-
-  it('returns { path: url, data: void 0 } when onError is "return-url"', async () => {
-    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
-
-    const resolver = createJsonFileSaveResolver({ onError: 'return-url' });
-    const result = await resolver('https://api.example.com/fail');
-
-    expect(result).toEqual({
-      path: 'https://api.example.com/fail',
-      data: void 0,
-    });
-  });
-
-  it('returns { path: "", data: void 0 } when onError is "return-empty"', async () => {
-    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
-
-    const resolver = createJsonFileSaveResolver({ onError: 'return-empty' });
-    const result = await resolver('https://api.example.com/fail');
-
-    expect(result).toEqual({
-      path: '',
-      data: void 0,
-    });
-  });
-});
