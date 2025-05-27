@@ -34,12 +34,12 @@ export function createImageDataUrlResolver(options: ImageDataUrlResolverOptions 
 
   const patterns = Array.isArray(targetPattern) ? targetPattern : [targetPattern];
 
-  return async function resolve(url: string, options: RequestInit = {}): Promise<string> {
+  return async function resolve(url: string, fetchOptions: RequestInit = {}): Promise<string> {
     if (url.trim().toLowerCase().startsWith('javascript:')) return url;
     if (!patterns.some(rx => rx.test(url))) return url;
 
     try {
-      const res = await fetch(url, options);
+      const res = await fetch(url, fetchOptions);
       if (!res.ok) {
         throw new Error(`Failed to fetch: ${url} (status ${res.status})`);
       }

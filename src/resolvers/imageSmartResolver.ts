@@ -59,22 +59,22 @@ export function createImageSmartResolver(options: ImageSmartResolverOptions): Re
     onError,
   });
 
-  return async function resolve(url: string, options: RequestInit = {}): Promise<string> {
+  return async function resolve(url: string, fetchOptions: RequestInit = {}): Promise<string> {
     if (!patterns.some(rx => rx.test(url))) return url;
 
     if (requirePatterns.some(rx => rx.test(url))) {
       try {
-        return await fileSaveResolver(url, options);
+        return await fileSaveResolver(url, fetchOptions);
       } catch (error) {
         return onErrorHandler<string>(error, onError, url, '');
       }
     }
 
     try {
-      return await dataUrlResolver(url, options);
+      return await dataUrlResolver(url, fetchOptions);
     } catch (dataurlError) {
       try {
-        return await fileSaveResolver(url, options);
+        return await fileSaveResolver(url, fetchOptions);
       } catch (filesaveError) {
         return onErrorHandler<string>(filesaveError, onError, url, '');
       }

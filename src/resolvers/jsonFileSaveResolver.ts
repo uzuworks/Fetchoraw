@@ -1,6 +1,5 @@
-import crypto from 'crypto';
 import { mkdir, writeFile } from 'fs/promises';
-import { basename, dirname, extname, join, normalize } from 'path';
+import { dirname } from 'path';
 import type { FileSaveResolverOptions, ResolveAssetFn, ResolverResult } from "../types";
 import {
   DEFAULT_SAVE_ROOT,
@@ -9,7 +8,7 @@ import {
   DEFAULT_PREPEND_PATH,
   DEFAULT_ON_ERROR,
 } from '../defaults.js';
-import { onErrorHandler } from '../utils';
+import { generateResolvedFilePaths, onErrorHandler } from '../utils.js';
 
 /**
  * Create a resolver that fetches JSON from a remote API and saves it as a local file.
@@ -37,30 +36,33 @@ export function createJsonFileSaveResolver(options: FileSaveResolverOptions = {}
 
   const patterns = Array.isArray(targetPattern) ? targetPattern : [targetPattern];
 
-  return async function resolve(url: string, options: RequestInit = {}): Promise<ResolverResult> {
+  return async function resolve(url: string, fetchOptions: RequestInit = {}): Promise<ResolverResult> {
     if (!patterns.some(rx => rx.test(url))) return { path: url};
 
     try {
-      const res = await fetch(url, options);
+      const res = await fetch(url, fetchOptions);
       if (!res.ok) {
         throw new Error(`Failed to fetch: ${url} (status ${res.status})`);
       }
-
       const jsonData = await res.json();
-      const urlObj = new URL(url);
-      const hashBase = JSON.stringify({ url, options })
-      const hash = crypto.createHash('sha256').update(hashBase).digest('hex').slice(0, 6);
-      const rawPathname = decodeURI(url.replace(urlObj.search, '').replace(keyString, ''));
-      const untrustedPath = `${dirname(rawPathname)}/${basename(rawPathname).replace(extname(rawPathname), '')}${hash}.json`;
-      const normalizedPath = normalize(untrustedPath).replace(/^\.+[\\/]/, '');
-      const savePath = join(saveRoot, normalizedPath.replace(/^\/+/g, ''));
 
-      await mkdir(dirname(savePath), { recursive: true });
-      await writeFile(savePath, JSON.stringify(jsonData, null, 2), 'utf8');
-      console.log(`Saved: ${savePath}`);
+      const paths = generateResolvedFilePaths(
+        url,
+        fetchOptions,
+        false,
+        6,
+        '.json',
+        saveRoot,
+        keyString,
+        prependPath
+      )
+
+      await mkdir(dirname(paths.savePath), { recursive: true });
+      await writeFile(paths.savePath, JSON.stringify(jsonData, null, 2), 'utf8');
+      console.log(`Saved: ${paths.savePath}`);
 
       return {
-        path: '/' + join(prependPath, normalizedPath).replace(/^\/+/g, ''),
+        path: paths.sitePath,
         data: jsonData
       } 
     } catch (error) {
