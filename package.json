@@ -1,6 +1,6 @@
 {
   "name": "fetchoraw-repo",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "A simple resolver-based URL transformer for Astro and CMS-driven projects.",
   "private": true,
   "repository": {

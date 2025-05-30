@@ -1,66 +1,114 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Fetchoraw } from '../../src/index';
-import { createImageFileSaveResolver } from '../../src/resolvers/imageFileSaveResolver';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import fs from 'fs/promises'
+import path, { join } from 'path'
+import { Fetchoraw } from '../../src/index'
+import { createImageFileSaveResolver } from '../../src/resolvers/imageFileSaveResolver'
+import { createJsonFileSaveResolver } from '../../src/resolvers/jsonFileSaveResolver'
 
-// Mock fs/promises
-vi.mock('fs/promises', async () => ({
-  mkdir: vi.fn(async () => {}),
-  writeFile: vi.fn(async () => {}),
-}));
+const TMP_DIR = path.join(process.cwd(), 'tmp-assets')
+const TEST_CACHE_PATH = 'test-cache.json'
 
-const mockData = new Uint8Array([65, 66, 67]); // ABC
+// URLs
+const IMG_URL = 'https://example.com/foo/bar.png'
+const JSON_URL = 'https://example.com/data/foo.json'
+const TEST_JSON = { message: 'Hello world!', count: 42 }
 
-describe('Fetchoraw FT (fileSaveResolver)', () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
+beforeEach(async () => {
+  await fs.rm(TMP_DIR, { recursive: true, force: true })
+  await fs.rm(path.join(process.cwd(), TEST_CACHE_PATH), { force: true })
+  await fs.mkdir(TMP_DIR, { recursive: true })
+  process.env.PUBLIC_FETCHORAW_MODE = 'FETCH'
+})
+
+afterEach(async () => {
+  await fs.rm(TMP_DIR, { recursive: true, force: true })
+  await fs.rm(path.join(process.cwd(), TEST_CACHE_PATH), { force: true })
+})
+
+describe('Fetchoraw FT: imageFileSaveResolver integration (real fs)', () => {
+  it('writes image file to local fs', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      arrayBuffer: async () => mockData,
-      headers: { get: () => 'image/png' },
-    });
-  });
+      arrayBuffer: async () => new Uint8Array([1, 2, 3]),
+      headers: {
+        get: (key: string) => (key.toLowerCase() === 'content-type' ? 'image/png' : null),
+      },
+    })
 
-  describe('Normal config (default settings)', () => {
-    it('rewrites img[src] to /assets path', async () => {
-      const resolver = createImageFileSaveResolver({
-        saveRoot: 'dist/assets',
-        prependPath: 'assets',
-        targetPattern: /^https?:\/\/[^\/]+\/?/,
-        keyString: /^https?:\/\/[^\/]+\/?/,
-      });
+    const resolver = createImageFileSaveResolver({
+      saveRoot: TMP_DIR,
+      prependPath: 'static',
+      targetPattern: /^https?:\/\/[^/]+/,
+      keyString: /^https?:\/\/[^/]+/,
+    })
 
-      const fetchoraw = new Fetchoraw(resolver, { envModeName: '' });
+    const fetchoraw = new Fetchoraw(resolver, {
+      cacheFilePath: TEST_CACHE_PATH,
+    })
 
-      const inputHtml = `<html><body><img src="https://example.com/images/a.png"></body></html>`;
-      const { html, map } = await fetchoraw.html(inputHtml, {
-        selectors: [{ selector: 'img[src]', attr: 'src' }],
-      });
+    const { html, map } = await fetchoraw.html(
+      `<img src="${IMG_URL}">`,
+      { selectors: [{ selector: 'img[src]', attr: 'src' }] }
+    )
 
-      expect(html).toContain('src="/assets/images/a.png"');
-      expect(map.get('https://example.com/images/a.png')).toBe('/assets/images/a.png');
-    });
-  });
+    const expectedPath = '/static/foo/bar.png'
+    const expectedFile = path.join(TMP_DIR, 'foo/bar.png')
+    const saved = await fs.readFile(expectedFile)
 
-  describe('Custom config (saveRoot and prependPath customized)', () => {
-    it('rewrites img[src] to customized /static path with multibyte support', async () => {
-      const resolver = createImageFileSaveResolver({
-        saveRoot: 'out/assets',
-        prependPath: 'static',
-        targetPattern: /^https?:\/\/[^\/]+\/?/,
-        keyString: /^https?:\/\/[^\/]+\/?/,
-      });
+    expect(html).toContain(`src="${expectedPath}"`)
+    expect(saved).toBeInstanceOf(Uint8Array)
+    expect(saved.length).toBe(3)
 
-      const fetchoraw = new Fetchoraw(resolver, { envModeName: '' });
+    expect(map[0]).toEqual({
+      url: IMG_URL,
+      resolvedPath: expectedPath,
+      fetchOptions: {},
+    })
+  })
+})
 
-      const inputUrl = 'https://cdn.example.com/dir space/日本語/file @2x.png';
-      const inputHtml = `<html><body><img src="${inputUrl}"></body></html>`;
+describe('Fetchoraw FT: jsonFileSaveResolver integration (real fs)', () => {
+  it('writes JSON file to local fs', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => TEST_JSON, // ← これが必須！！！
+      arrayBuffer: async () => new TextEncoder().encode(JSON.stringify(TEST_JSON)),
+      headers: {
+        get: (key: string) => (key.toLowerCase() === 'content-type' ? 'application/json' : null),
+      },
+    })
 
-      const { html, map } = await fetchoraw.html(inputHtml, {
-        selectors: [{ selector: 'img[src]', attr: 'src' }],
-      });
+    const resolver = createJsonFileSaveResolver({
+      saveRoot: TMP_DIR,
+      prependPath: 'static',
+      targetPattern: /^https?:\/\/[^/]+/,
+      keyString: /^https?:\/\/[^/]+/,
+    })
 
-      expect(html).toContain('src="/static/dir space/日本語/file @2x.png"');
-      expect(map.get(inputUrl)).toBe('/static/dir space/日本語/file @2x.png');
-    });
-  });
-});
+    const fetchoraw = new Fetchoraw(resolver, {
+      cacheFilePath: TEST_CACHE_PATH,
+    })
+
+    const { html, map } = await fetchoraw.html(
+      `<script src="${JSON_URL}"></script>`,
+      { selectors: [{ selector: 'script[src]', attr: 'src' }] }
+    )
+
+    const files = await fs.readdir(join(TMP_DIR, 'data'), { withFileTypes: true })
+    const jsonFile = files.find(file => file.isFile() && /^foo-[\w\d]+\.json$/.test(file.name))
+
+    const expectedPath = `/static/data/${jsonFile?.name || ''}`
+    const expectedFile = join(TMP_DIR, 'data', jsonFile?.name || '')
+    const saved = await fs.readFile(expectedFile, 'utf-8')
+    const parsed = JSON.parse(saved)
+
+    expect(html).toContain(`src="${expectedPath}"`)
+    expect(parsed).toEqual(TEST_JSON)
+
+    expect(map[0]).toEqual({
+      url: JSON_URL,
+      resolvedPath: expectedPath,
+      fetchOptions: {},
+    })
+  })
+})

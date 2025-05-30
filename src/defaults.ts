@@ -1,47 +1,83 @@
 import { urlSelectors } from './presets.js';
 
 /**
- * Max size for inlining data URLs (default: 2MB)
+ * Maximum size (in bytes) for inlining data URLs.
+ * If exceeded, file will be saved instead.
+ *
+ * Default: 2MB (safe for most browsers like Chrome)
  */
 export const DEFAULT_INLINE_LIMIT = 2 * 1024 * 1024;
 
 /**
- * Pattern to match URLs (default: all http/https)
+ * Pattern to match URLs considered for rewriting.
+ *
+ * Default: matches all `http://` and `https://` URLs with a domain.
  */
 export const DEFAULT_TARGET_PATTERN = /^https?:\/\/[^\/]+\/?/;
 
 /**
- * Key string pattern to strip from saved paths
+ * Pattern or string to strip when building relative save paths.
+ *
+ * Default: removes the origin (protocol + domain) from URL.
  */
 export const DEFAULT_KEY_STRING = /^https?:\/\/[^\/]+\/?/;
 
 /**
- * Error handling mode (default: "throw")
+ * Default fallback behavior on asset processing error.
+ *
+ * Options: `'throw' | 'return-url' | 'return-empty'`
+ * Default: `'throw'` (fail-fast)
  */
 export const DEFAULT_ON_ERROR = 'throw';
 
 /**
- * Default root directory for saved files
+ * Default directory under which resolved files will be saved.
+ *
+ * Used by file-based resolvers.
+ * Default: `dist/assets` (suitable for many build tools)
  */
 export const DEFAULT_SAVE_ROOT = 'dist/assets';
 
 /**
- * Path prefix for rewritten URLs
+ * Default prefix to prepend to rewritten URLs in HTML or output.
+ *
+ * For example, `assets/foo.jpg` becomes `/assets/foo.jpg`.
  */
 export const DEFAULT_PREPEND_PATH = 'assets';
 
 /**
- * Env var name to control rewriting (default: "FETCHORAW_MODE")
+ * Environment variable name that determines the exec mode.
+ *
+ * Default: `PUBLIC_FETCHORAW_MODE`
+ * This allows both SSR/build-time and runtime env control.
  */
-export const DEFAULT_ENV_NAME = 'FETCHORAW_MODE';
+export const DEFAULT_ENV_NAME = 'PUBLIC_FETCHORAW_MODE';
 
 /**
- * Env var value that enables rewriting (default: "FETCH")
+ * Environment variable value to enable FETCH mode (network requests).
+ *
+ * Default: `'FETCH'`
  */
-export const DEFAULT_ENABLE_ENV_VALUE = 'FETCH';
+export const DEFAULT_ENABLE_FETCH_ENV_VALUE = 'FETCH';
 
 /**
- * Default target selectors (img[src], source[srcset], etc.)
+ * Environment variable value to enable CACHE mode (use cache file only).
+ *
+ * Default: `'CACHE'`
+ */
+export const DEFAULT_ENABLE_CACHE_ENV_VALUE = 'CACHE';
+
+/**
+ * Default cache file path for storing fetch results.
+ *
+ * Used only when CACHE mode is active.
+ */
+export const DEFAULT_CACHE_FILE_PATH = 'cache/fetchoraw_cache.json';
+
+/**
+ * Default selector + attribute pairs to rewrite in HTML.
+ *
+ * Based on common media use cases (img, source, video, etc.)
  */
 export const DEFAULT_SELECTORS = [
   urlSelectors.ImgSrc,

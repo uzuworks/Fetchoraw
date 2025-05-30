@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from 'fs/promises';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import type { FileSaveResolverOptions, ResolveAssetFn, ResolverResult } from "../types";
 import {
   DEFAULT_SAVE_ROOT,
@@ -9,6 +9,8 @@ import {
   DEFAULT_ON_ERROR,
 } from '../defaults.js';
 import { generateResolvedFilePaths, onErrorHandler } from '../utils.js';
+
+const PROJECT_ROOT = process.cwd()
 
 /**
  * Create a resolver that fetches JSON from a remote API and saves it as a local file.

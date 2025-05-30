@@ -11,7 +11,7 @@ beforeEach(() => {
 });
 
 describe('jsonFileSaveResolver: basic cases', () => {
-  it('fetches JSON and saves to default path', async () => {
+  it('when given a simple URL → should fetch JSON, save it, and return path and data', async () => {
     const mockJson = { hello: 'world' };
 
     global.fetch = vi.fn().mockResolvedValue({
@@ -29,7 +29,7 @@ describe('jsonFileSaveResolver: basic cases', () => {
     expect(result.path.endsWith('.json')).toBe(true);
   });
 
-  it('generates different filenames for different query params', async () => {
+  it('when URLs differ by query parameters → should produce different filenames', async () => {
     const mockJson = { items: [1, 2, 3] };
 
     global.fetch = vi.fn().mockResolvedValue({
@@ -47,7 +47,7 @@ describe('jsonFileSaveResolver: basic cases', () => {
     expect(res2.data).toEqual(mockJson);
   });
 
-  it('handles JSON with unicode path safely', async () => {
+  it('when URL contains Unicode characters → should sanitize path and return JSON', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ status: 'ok' }),
@@ -58,7 +58,7 @@ describe('jsonFileSaveResolver: basic cases', () => {
     const result = await resolver(url);
 
     expect(result.path.endsWith('.json')).toBe(true);
-    expect(result.path).not.toMatch(/[%\\:]/);
+    expect(result.path).not.toMatch(/[%\\:]/); // prevent unsafe characters in path
     expect(result.data).toHaveProperty('status', 'ok');
   });
 });

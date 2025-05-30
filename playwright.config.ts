@@ -6,5 +6,6 @@ export default defineConfig({
   fullyParallel: true,
   use: {
     headless: true
-  }
+  },
+  workers: 1,
 })

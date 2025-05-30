@@ -1,25 +1,24 @@
-# Fetchoraw (日本語版)
+# Fetchoraw（日本語版）
 
 [![npm version](https://img.shields.io/npm/v/fetchoraw)](https://www.npmjs.com/package/fetchoraw)
 [![MIT License](https://img.shields.io/npm/l/fetchoraw)](./LICENSE)
 ![type: module](https://img.shields.io/badge/type-module-green)
 
-**Fetchoraw** は、HTML内のアセットURL（`src`、`href`など）を変換するための小さなライブラリです。
-カスタムリゾルバを使って自由にURLを書き換えることができます。
-
-[View this page in English →](./README.md)
+**Fetchoraw** は、HTML内のアセットURLを書き換えるための軽量ライブラリです。  
+`src` や `href` などの属性を、独自のリゾルバを使って自由に置き換えることができます。
 
 ---
 
-## ✨ 特徴
+## ✨ 特長
 
-* HTML内のアセットリンクを簡単に変換
-* 任意のルールでリゾルバを作成可能
-* シンプルで柔軟なAPI
+- HTMLや構造化コンテンツ内のアセットリンクを一括書き換え
+- 独自のリゾルバで柔軟に制御可能
+- HTML全体、または単一URLの解決に対応
+- `data:` URL、ファイル保存、スマート切り替えなどの組み込みリゾルバ付き
 
 ---
 
-## 📆 インストール
+## 📦 インストール
 
 ```bash
 npm install fetchoraw
@@ -29,107 +28,130 @@ npm install fetchoraw
 
 ## 🚀 使い方
 
-### HTMLをリライトする
+### カスタムリゾルバでHTMLを書き換える
 
 ```ts
 import { Fetchoraw } from 'fetchoraw';
 
-// 例: CDN URLをローカルパスに書き換えるリゾルバ
-const resolver = async (url: string) => url.replace('https://cdn.example.com/', '/assets/');
+const resolver = async (url: string) =>
+  url.replace('https://cdn.example.com/', '/assets/');
 
 const fetchoraw = new Fetchoraw(resolver);
-const { output: html, map } = await fetchoraw.html(
-  '<html><body><img src="https://cdn.example.com/images/pic.png"></body></html>'
+const { html, map } = await fetchoraw.html(
+  '<img src="https://cdn.example.com/logo.png">'
 );
 
-console.log(html); // <html><body><img src="/assets/images/pic.png"></body></html>
-console.log(map);  // Map { "https://cdn.example.com/images/pic.png" => "/assets/images/pic.png" }
+console.log(html); // <img src="/assets/logo.png">
+console.log(map);  // [{ url: 'https://cdn.example.com/logo.png', resolvedPath: '/assets/logo.png' }]
 ```
 
-### 単一のURLを変換する
+### 単一のURLを解決する
 
 ```ts
 const fetchoraw = new Fetchoraw(resolver);
-const { output: newUrl } = await fetchoraw.url('https://cdn.example.com/images/pic.png');
+const result = await fetchoraw.url('https://cdn.example.com/logo.png');
 
-console.log(newUrl); // "/assets/images/pic.png"
+console.log(result.path); // /assets/logo.png
 ```
 
 ---
 
-## 🛠 概要
+## 🛠 API概要
 
-### Fetchoraw クラス
+### `Fetchoraw` クラス
 
-* `new Fetchoraw(resolver, options?)`
+```ts
+new Fetchoraw(resolver, options?)
+```
 
-  * `resolver`: `(url: string) => Promise<string>` 型の関数
-  * `options.envModeName?`: 環境変数の名前（デフォルト: `"FETCHORAW_MODE"`）
-  * `options.enableEnvValue?`: 有効化する値（デフォルト: `"FETCH"`）
+- `resolver`: `(url: string, options?: RequestInit) => Promise<string | { path: string, data?: unknown }>`
+- `options.envModeName?`: 環境変数名（デフォルト: `PUBLIC_FETCHORAW_MODE`）
+- `options.enableFetchEnvValue?`: 書き換えを有効にする値（デフォルト: `FETCH`）
+- `options.enableCacheEnvValue?`: キャッシュを使用する値（デフォルト: `CACHE`）
+- `options.cacheFilePath?`: キャッシュファイルのパス（デフォルト: `cache/fetchoraw_cache.json`）
 
-* `await fetchoraw.html(html, config?)`
+#### メソッド
 
-  * `html`: 入力HTML文字列
-  * `config.selectors?`: 書き換え対象のセレクタリスト（デフォルトあり）
-  * 戻り値: `{ output: string, map: Map<string, string> }`
+##### `html(html: string, config?)`
 
-* `await fetchoraw.url(url, origin?)`
+- `config.selectors?`: 対象セレクタと属性（デフォルト: `img[src]`, `source[srcset]` など）
+- 戻り値: `{ html, map }`
 
-  * `url`: 対象のURL文字列（絶対、相対、プロトコル相対）
-  * `origin?`: 相対URLを解決する基準となるオリジン
-  * 戻り値: `{ output: string, map: Map<string, string> }`
+##### `url(url: string, origin?, fetchOptions?)`
+
+- 単一のURLを解決
+- 戻り値: `{ path, data?, map }`
 
 ---
 
-## 🧙‍♂️ リゾルバの種類と使い方
+## 🧙 組み込みリゾルバ
 
-自作リゾルバのほか、以下の組み込みリゾルバが利用できます。
+ユースケースに応じて以下のリゾルバを利用できます：
 
-### Data URLリゾルバ
+### `createDataUrlResolver()`
 
-ファイルを取得してBase64の `data:` URLに変換します。
+ファイルを取得して `data:` URL（base64）としてインライン化。
 
 ```ts
-import { createDataUrlResolver } from 'fetchoraw';
+import { createDataUrlResolver } from 'fetchoraw/resolvers';
 
 const resolver = createDataUrlResolver();
-const fetchoraw = new Fetchoraw(resolver);
-const { output: html } = await fetchoraw.html('<img src="https://cdn.example.com/images/pic.png">');
-
-console.log(html); // <img src="data:image/png;base64,...">
 ```
 
-### ファイル保存リゾルバ
+オプション:
+- `inlineLimitBytes`: インライン化の最大サイズ（デフォルト: 2MB）
+- `allowMimeTypes`: 対象のMIMEタイプ（画像・音声・動画・PDFなど）
 
-ファイルをダウンロードしてローカルに保存します。
+---
+
+### `createFileSaveResolver()`
+
+ファイルをローカルに保存し、パスを書き換える。
 
 ```ts
-import { createFileSaveResolver } from 'fetchoraw';
+import { createFileSaveResolver } from 'fetchoraw/resolvers';
 
 const resolver = createFileSaveResolver({
   saveRoot: 'public/assets',
   prependPath: 'assets'
 });
-const fetchoraw = new Fetchoraw(resolver);
-const { output: html } = await fetchoraw.html('<img src="https://cdn.example.com/images/pic.png">');
-
-console.log(html); // <img src="/assets/images/pic.png">
 ```
 
-### スマートリゾルバ
+オプション:
+- `saveRoot`: 保存先ディレクトリ（デフォルト: `dist/assets`）
+- `prependPath`: 書き換え後パスのプレフィックス（デフォルト: `assets`）
+- `keyString`: 保存パスから削除する対象（デフォルト: URLのベース）
 
-小さいファイルはData URL化、それ以外はローカル保存に自動で振り分けます。
+---
+
+### `createSmartResolver()`
+
+小さなファイルはインライン化、大きなファイルは保存。
 
 ```ts
-import { createSmartResolver } from 'fetchoraw';
+import { createSmartResolver } from 'fetchoraw/resolvers';
 
-const resolver = createSmartResolver({ inlineLimitBytes: 500000 });
-const fetchoraw = new Fetchoraw(resolver);
-const { output: html } = await fetchoraw.html('<img src="https://cdn.example.com/images/pic.png">');
-
-// ファイルサイズに応じた結果が出力されます
-console.log(html);
+const resolver = createSmartResolver({
+  inlineLimitBytes: 500000,
+  requireFilePatterns: [/\.svg$/]
+});
 ```
+
+- サイズによって `data:` またはファイル保存に自動切り替え
+
+---
+
+### `createJsonFileSaveResolver()`
+
+JSONを取得し、ファイル保存とデータ抽出の両方に対応。
+
+```ts
+import { createJsonFileSaveResolver } from 'fetchoraw/resolvers';
+
+const resolver = createJsonFileSaveResolver();
+```
+
+CMS API、設定ファイル、フィードなどに便利です。
 
 ---
 

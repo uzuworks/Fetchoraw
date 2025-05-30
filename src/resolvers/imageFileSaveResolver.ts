@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer';
 import { mkdir, writeFile } from 'fs/promises';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import type { FileSaveResolverOptions, ResolveAssetFn } from '../types.js';
 import {
   DEFAULT_SAVE_ROOT,
@@ -10,6 +10,8 @@ import {
   DEFAULT_ON_ERROR,
 } from '../defaults.js';
 import { generateResolvedFilePaths, onErrorHandler } from '../utils.js';
+
+const PROJECT_ROOT = process.cwd()
 
 /**
  * Create a resolver that saves assets to local files.
@@ -47,8 +49,6 @@ export function createImageFileSaveResolver(options: FileSaveResolverOptions = {
       }
 
       const buffer = Buffer.from(await res.arrayBuffer());
-
-
       const paths = generateResolvedFilePaths(
         url,
         fetchOptions,
