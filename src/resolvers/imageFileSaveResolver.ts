@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { mkdir, writeFile } from 'fs/promises';
-import { basename, dirname, extname, join, normalize } from 'path';
-import type { FileSaveResolverOptions } from '../types.js';
+import { dirname, join } from 'path';
+import type { FileSaveResolverOptions, ResolveAssetFn } from '../types.js';
 import {
   DEFAULT_SAVE_ROOT,
   DEFAULT_TARGET_PATTERN,
@@ -9,6 +9,9 @@ import {
   DEFAULT_PREPEND_PATH,
   DEFAULT_ON_ERROR,
 } from '../defaults.js';
+import { generateResolvedFilePaths, onErrorHandler } from '../utils.js';
+
+const PROJECT_ROOT = process.cwd()
 
 /**
  * Create a resolver that saves assets to local files.
@@ -24,7 +27,7 @@ import {
  * @param options.onError - error handling mode (default: "throw")
  * @returns function to resolve a URL
  */
-export function createFileSaveResolver(options: FileSaveResolverOptions = {}) {
+export function createImageFileSaveResolver(options: FileSaveResolverOptions = {}): ResolveAssetFn<string> {
   const {
     saveRoot = DEFAULT_SAVE_ROOT,
     targetPattern = DEFAULT_TARGET_PATTERN,
@@ -35,37 +38,37 @@ export function createFileSaveResolver(options: FileSaveResolverOptions = {}) {
 
   const patterns = Array.isArray(targetPattern) ? targetPattern : [targetPattern];
 
-  return async function resolve(url: string): Promise<string> {
+  return async function resolve(url: string, fetchOptions: RequestInit = {}): Promise<string> {
     if (url.trim().toLowerCase().startsWith('javascript:')) return url;
     if (!patterns.some(rx => rx.test(url))) return url;
 
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, fetchOptions);
       if (!res.ok) {
         throw new Error(`Failed to fetch: ${url} (status ${res.status})`);
       }
 
       const buffer = Buffer.from(await res.arrayBuffer());
+      const paths = generateResolvedFilePaths(
+        url,
+        fetchOptions,
+        true,
+        0,
+        '',
+        saveRoot,
+        keyString,
+        prependPath
+      )
 
-      const urlObj = new URL(url);
-      const replacedSearch = [...urlObj.searchParams.entries()]
-        .map(([k, v]) => `-${k}${v}`)
-        .join('');
-      const rawPathname = decodeURI(url.replace(urlObj.search, '').replace(keyString, ''));
-      const untrustedPath = `${dirname(rawPathname)}/${basename(rawPathname).replace(extname(rawPathname), '')}${replacedSearch}${extname(rawPathname)}`;
-      const normalizedPath = normalize(untrustedPath).replace(/^\.+[\\/]/, '');
-      const savePath = join(saveRoot, normalizedPath.replace(/^\/+/g, ''));
+      await mkdir(dirname(paths.savePath), { recursive: true });
+      await writeFile(paths.savePath, buffer);
+      console.log(`Saved: ${paths.savePath}`);
 
-      await mkdir(dirname(savePath), { recursive: true });
-      await writeFile(savePath, buffer);
-      console.log(`Saved: ${savePath}`);
-
-      return '/' + join(prependPath, normalizedPath).replace(/^\/+/g, '');
+      return paths.sitePath;
     } catch (error) {
-      console.warn(`Error saving: ${url} (${(error as Error).message})`);
-      if (onError === 'return-empty') return '';
-      if (onError === 'return-url') return url;
-      throw error;
+      return onErrorHandler<string>(error, onError, url, '');
     }
   };
 }
+
+export const imageFileSave = createImageFileSaveResolver;

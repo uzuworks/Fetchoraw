@@ -4,8 +4,8 @@
 [![MIT License](https://img.shields.io/npm/l/fetchoraw)](./LICENSE)
 ![type: module](https://img.shields.io/badge/type-module-green)
 
-**Fetchoraw** is a tiny library to transform asset URLs in HTML.
-You can rewrite `src`, `href`, and other attributes using your custom resolver.
+**Fetchoraw** is a small library to rewrite asset URLs in HTML.
+You can replace `src`, `href`, and other attributes using your own resolver.
 
 [Read this page in Japanese →](./README.ja.md)
 
@@ -13,14 +13,14 @@ You can rewrite `src`, `href`, and other attributes using your custom resolver.
 
 ## ✨ Features
 
-* Rewrite HTML asset links easily
-* Use your own resolver for URL rewriting
-* Supports both full HTML and individual URL resolution
-* Simple and flexible API
+* Rewrite asset links in HTML or structured content
+* Fully customizable with your own resolver
+* Supports both full HTML rewriting and individual URL resolution
+* Built-in resolvers for data URLs, file saving, smart handling
 
 ---
 
-## 📆 Install
+## 📦 Install
 
 ```bash
 npm install fetchoraw
@@ -30,7 +30,7 @@ npm install fetchoraw
 
 ## 🚀 Usage
 
-### Rewrite HTML with custom resolver
+### Rewrite HTML with a custom resolver
 
 ```ts
 import { Fetchoraw } from 'fetchoraw';
@@ -39,98 +39,124 @@ const resolver = async (url: string) =>
   url.replace('https://cdn.example.com/', '/assets/');
 
 const fetchoraw = new Fetchoraw(resolver);
-const { output: html, map } = await fetchoraw.html(
-  '<html><body><img src="https://cdn.example.com/images/pic.png"></body></html>'
+const { html, map } = await fetchoraw.html(
+  '<img src="https://cdn.example.com/logo.png">'
 );
 
-console.log(html); // <html><body><img src="/assets/images/pic.png"></body></html>
-console.log(map);  // Map { "https://cdn.example.com/images/pic.png" => "/assets/images/pic.png" }
+console.log(html); // <img src="/assets/logo.png">
+console.log(map);  // [{ url: 'https://cdn.example.com/logo.png', resolvedPath: '/assets/logo.png' }]
 ```
 
 ### Resolve a single URL
 
 ```ts
 const fetchoraw = new Fetchoraw(resolver);
-const { output: newUrl } = await fetchoraw.url('https://cdn.example.com/images/pic.png');
+const result = await fetchoraw.url('https://cdn.example.com/logo.png');
 
-console.log(newUrl); // "/assets/images/pic.png"
+console.log(result.path); // /assets/logo.png
 ```
 
 ---
 
-## 🛠 Overview
+## 🛠 API Overview
 
-### Fetchoraw class
+### `Fetchoraw`
 
-* `new Fetchoraw(resolver, options?)`
+```ts
+new Fetchoraw(resolver, options?)
+```
 
-  * `resolver`: `(url: string) => Promise<string>`
-  * `options.envModeName?`: environment variable name to control rewriting (default: `"FETCHORAW_MODE"`)
-  * `options.enableEnvValue?`: value that enables rewriting (default: `"FETCH"`)
+* `resolver`: `(url: string, options?: RequestInit) => Promise<string | { path: string, data?: unknown }> `
+* `options.envModeName?`: env var name to control rewriting (default: `PUBLIC_FETCHORAW_MODE`)
+* `options.enableFetchEnvValue?`: value to enable rewriting (default: `FETCH`)
+* `options.enableCacheEnvValue?`: value to read from cache (default: `CACHE`)
+* `options.cacheFilePath?`: file to store cache (default: `cache/fetchoraw_cache.json`)
 
-* `await fetchoraw.html(html, config?)`
+#### Methods
 
-  * `html`: input HTML string
-  * `config.selectors?`: target selectors to rewrite (default presets provided)
-  * returns `{ output: string, map: Map<string, string> }`
+##### `html(html: string, config?)`
 
-* `await fetchoraw.url(url, origin?)`
+* `config.selectors?`: selectors/attributes to rewrite (default presets: `img[src]`, `source[srcset]`, etc.)
+* Returns `{ html, map }`
 
-  * `url`: target URL string (absolute, relative, or protocol-relative)
-  * `origin?`: base origin to resolve relative URLs
-  * returns `{ output: string, map: Map<string, string> }`
+##### `url(url: string, origin?, fetchOptions?)`
+
+* Resolves a single URL
+* Returns `{ path, data?, map }`
 
 ---
 
-## 🧙‍♂️ Resolver Types
+## 🧙 Built-in Resolvers
 
-You can create your own resolver or use built-in resolvers:
+You can use any of the included resolvers depending on your use case:
 
-### Data URL Resolver
+### `createDataUrlResolver()`
 
-Fetches a file and inlines it as a base64 `data:` URL.
+Fetches and inlines assets as base64 `data:` URLs.
 
 ```ts
-import { createDataUrlResolver } from 'fetchoraw';
+import { createDataUrlResolver } from 'fetchoraw/resolvers';
 
 const resolver = createDataUrlResolver();
-const fetchoraw = new Fetchoraw(resolver);
-const { output: html } = await fetchoraw.html('<img src="https://cdn.example.com/images/pic.png">');
-
-console.log(html); // <img src="data:image/png;base64,...">
 ```
 
-### File Save Resolver
+Options:
 
-Downloads a file and saves it to your local filesystem.
+* `inlineLimitBytes`: max size to inline (default: 2MB)
+* `allowMimeTypes`: allowed types (default: image/audio/video/pdf)
+
+---
+
+### `createFileSaveResolver()`
+
+Saves remote assets to the local filesystem.
 
 ```ts
-import { createFileSaveResolver } from 'fetchoraw';
+import { createFileSaveResolver } from 'fetchoraw/resolvers';
 
 const resolver = createFileSaveResolver({
   saveRoot: 'public/assets',
   prependPath: 'assets'
 });
-const fetchoraw = new Fetchoraw(resolver);
-const { output: html } = await fetchoraw.html('<img src="https://cdn.example.com/images/pic.png">');
-
-console.log(html); // <img src="/assets/images/pic.png">
 ```
 
-### Smart Resolver
+Options:
 
-Tries to inline small files as data URLs, otherwise saves as local files.
+* `saveRoot`: root folder to store files (default: `dist/assets`)
+* `prependPath`: prefix in rewritten paths (default: `assets`)
+* `keyString`: pattern to strip from saved paths (default: URL base)
+
+---
+
+### `createSmartResolver()`
+
+Combines `data:` and file saving based on file size and URL pattern.
 
 ```ts
-import { createSmartResolver } from 'fetchoraw';
+import { createSmartResolver } from 'fetchoraw/resolvers';
 
-const resolver = createSmartResolver({ inlineLimitBytes: 500000 });
-const fetchoraw = new Fetchoraw(resolver);
-const { output: html } = await fetchoraw.html('<img src="https://cdn.example.com/images/pic.png">');
-
-// Result depends on file size: data URL or saved path
-console.log(html);
+const resolver = createSmartResolver({
+  inlineLimitBytes: 500000,
+  requireFilePatterns: [/\.svg$/]
+});
 ```
+
+* Small files are inlined
+* Larger or matching `requireFilePatterns` are saved to file
+
+---
+
+### `createJsonFileSaveResolver()`
+
+Fetches JSON and saves both the file and parsed data.
+
+```ts
+import { createJsonFileSaveResolver } from 'fetchoraw/resolvers';
+
+const resolver = createJsonFileSaveResolver();
+```
+
+Useful for working with CMS APIs, feeds, config files, etc.
 
 ---
 

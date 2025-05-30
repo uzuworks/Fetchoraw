@@ -1,4 +1,4 @@
-import type { SmartResolverOptions } from '../types.js';
+import type { ImageSmartResolverOptions, ResolveAssetFn, ResolverResult } from '../types.js';
 import {
   DEFAULT_TARGET_PATTERN,
   DEFAULT_INLINE_LIMIT,
@@ -8,8 +8,9 @@ import {
   DEFAULT_ON_ERROR
 } from '../defaults.js';
 
-import { createDataUrlResolver } from './basicDataUrlResolver.js';
-import { createFileSaveResolver } from './basicFileSaveResolver.js';
+import { createImageDataUrlResolver } from './imageDataUrlResolver.js';
+import { createImageFileSaveResolver } from './imageFileSaveResolver.js';
+import { onErrorHandler } from '../utils.js';
 
 /**
  * Create a smart resolver that tries data URL first, then file save.
@@ -28,7 +29,7 @@ import { createFileSaveResolver } from './basicFileSaveResolver.js';
  * @param options.onError - error handling mode (default: "throw")
  * @returns function to resolve a URL
  */
-export function createSmartResolver(options: SmartResolverOptions) {
+export function createImageSmartResolver(options: ImageSmartResolverOptions): ResolveAssetFn<string> {
   const {
     requireFilePatterns = [],
     targetPattern = DEFAULT_TARGET_PATTERN,
@@ -43,14 +44,14 @@ export function createSmartResolver(options: SmartResolverOptions) {
   const patterns = Array.isArray(targetPattern) ? targetPattern : [targetPattern];
   const requirePatterns = Array.isArray(requireFilePatterns) ? requireFilePatterns : [requireFilePatterns];
 
-  const dataUrlResolver = createDataUrlResolver({
+  const dataUrlResolver = createImageDataUrlResolver({
     targetPattern,
     inlineLimitBytes,
     allowMimeTypes,
     onError,
   });
 
-  const fileSaveResolver = createFileSaveResolver({
+  const fileSaveResolver = createImageFileSaveResolver({
     saveRoot,
     keyString,
     prependPath,
@@ -58,29 +59,27 @@ export function createSmartResolver(options: SmartResolverOptions) {
     onError,
   });
 
-  return async function resolve(url: string): Promise<string> {
+  return async function resolve(url: string, fetchOptions: RequestInit = {}): Promise<string> {
     if (!patterns.some(rx => rx.test(url))) return url;
 
     if (requirePatterns.some(rx => rx.test(url))) {
       try {
-        return await fileSaveResolver(url);
+        return await fileSaveResolver(url, fetchOptions);
       } catch (error) {
-        if (onError === 'return-url') return url;
-        if (onError === 'return-empty') return '';
-        throw error;
+        return onErrorHandler<string>(error, onError, url, '');
       }
     }
 
     try {
-      return await dataUrlResolver(url);
+      return await dataUrlResolver(url, fetchOptions);
     } catch (dataurlError) {
       try {
-        return await fileSaveResolver(url);
+        return await fileSaveResolver(url, fetchOptions);
       } catch (filesaveError) {
-        if (onError === 'return-url') return url;
-        if (onError === 'return-empty') return '';
-        throw filesaveError;
+        return onErrorHandler<string>(filesaveError, onError, url, '');
       }
     }
   };
 }
+
+const imageSmart = createImageSmartResolver;

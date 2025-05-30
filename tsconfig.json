@@ -10,7 +10,8 @@
     "skipLibCheck": true,
     "strict": true,
     "allowJs": false,
-    "isolatedModules": false
+    "isolatedModules": false,
+    "types": ["vitest/globals"],
   },
   "include": ["src", "test"],
   "exclude": ["dist", "coverage", "src/futures", "node_modules"]

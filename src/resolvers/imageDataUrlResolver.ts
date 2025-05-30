@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { extname } from 'path';
 import mime from 'mime';
-import type { DataUrlResolverOptions } from '../types.js';
+import type { ImageDataUrlResolverOptions, ResolveAssetFn } from '../types.js';
 import {
   DEFAULT_INLINE_LIMIT,
   DEFAULT_TARGET_PATTERN,
@@ -9,6 +9,7 @@ import {
   DENY_ALWAYS_MIME_TYPES,
   DEFAULT_ON_ERROR,
 } from '../defaults.js';
+import { onErrorHandler } from '../utils.js';
 
 /**
  * Create a resolver that inlines assets as data URLs.
@@ -23,7 +24,7 @@ import {
  * @param options.onError - error handling mode (default: "throw")
  * @returns function to resolve a URL
  */
-export function createDataUrlResolver(options: DataUrlResolverOptions = {}) {
+export function createImageDataUrlResolver(options: ImageDataUrlResolverOptions = {}): ResolveAssetFn<string> {
   const {
     inlineLimitBytes = DEFAULT_INLINE_LIMIT,
     allowMimeTypes = DEFAULT_ALLOW_MIME_TYPES,
@@ -33,12 +34,12 @@ export function createDataUrlResolver(options: DataUrlResolverOptions = {}) {
 
   const patterns = Array.isArray(targetPattern) ? targetPattern : [targetPattern];
 
-  return async function resolve(url: string): Promise<string> {
+  return async function resolve(url: string, fetchOptions: RequestInit = {}): Promise<string> {
     if (url.trim().toLowerCase().startsWith('javascript:')) return url;
     if (!patterns.some(rx => rx.test(url))) return url;
 
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, fetchOptions);
       if (!res.ok) {
         throw new Error(`Failed to fetch: ${url} (status ${res.status})`);
       }
@@ -68,12 +69,10 @@ export function createDataUrlResolver(options: DataUrlResolverOptions = {}) {
       console.log(`Inlined: ${url} (${buffer.length} bytes)`);
       return `data:${contentType};base64,${base64}`;
     } catch (error) {
-      console.warn(`Error inlining: ${url} (${(error as Error).message})`);
-      if (onError === 'return-empty') return '';
-      if (onError === 'return-url') return url;
-
-      throw error;
+      return onErrorHandler<string>(error, onError, url, '');
     }
 
   };
 }
+
+export const imageDataUrl = createImageDataUrlResolver;

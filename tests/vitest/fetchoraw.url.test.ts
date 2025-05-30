@@ -1,70 +1,68 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Fetchoraw } from '../../src/index';
+import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest'
+import { Fetchoraw } from '../../src/index'
+import fs from 'fs/promises'
+import path from 'path'
 
-const testUrl = 'https://example.com/image.png';
+const TEST_CACHE_PATH = 'test-cache.json'
+const TEST_URL = 'https://example.com/image.png'
+const CACHE_KEY = `${TEST_URL}::{}`
+const CACHED_VALUE = 'CACHED_PATH'
+const RESOLVED_VALUE = `RESOLVED:${TEST_URL}`
+
+const mockResolver = vi.fn(async (url: string) => RESOLVED_VALUE)
 
 describe('Fetchoraw.url()', () => {
-  const mockResolver = vi.fn(async (url: string) => `resolved:${url}`);
+  beforeEach(async () => {
+    mockResolver.mockClear()
+    await fs.rm(TEST_CACHE_PATH, { force: true }).catch(() => {})
+  })
 
-  beforeEach(() => {
-    mockResolver.mockClear();
-    delete process.env.FETCHORAW_MODE;
-  });
+  afterEach(async () => {
+    await fs.rm(TEST_CACHE_PATH, { force: true }).catch(() => {})
+  })
 
-  it('absolute URL + FETCHORAW_MODE active -> resolves via resolver', async () => {
-    process.env.FETCHORAW_MODE = 'FETCH';
-    const fetchoraw = new Fetchoraw(mockResolver);
-    const { output } = await fetchoraw.url(testUrl);
-    expect(output).toBe(`resolved:${testUrl}`);
-    expect(mockResolver).toHaveBeenCalledWith(testUrl);
-  });
+  it('CACHE mode & hit -> returns cached result', async () => {
+    await fs.writeFile(TEST_CACHE_PATH,
+      JSON.stringify([[CACHE_KEY, { path: CACHED_VALUE }]], null, 2),
+      'utf8'
+    )
 
-  it('FETCHORAW_MODE unset -> skips resolution & returns input', async () => {
-    const fetchoraw = new Fetchoraw(mockResolver);
-    const { output } = await fetchoraw.url(testUrl);
-    expect(output).toBe(testUrl);
-    expect(mockResolver).not.toHaveBeenCalled();
-  });
+    process.env.PUBLIC_FETCHORAW_MODE = 'CACHE'
+    const f = new Fetchoraw(mockResolver, {
+      cacheFilePath: TEST_CACHE_PATH,
+    })
 
-  it('relative URL with origin -> resolves to absolute URL', async () => {
-    process.env.FETCHORAW_MODE = 'FETCH';
-    const fetchoraw = new Fetchoraw(mockResolver);
-    const { output } = await fetchoraw.url('/a/b.png', 'https://site.com');
-    expect(output).toBe('resolved:https://site.com/a/b.png');
-  });
+    const result = await f.url(TEST_URL)
+    expect(result.path).toBe(CACHED_VALUE)
+    expect(mockResolver).not.toHaveBeenCalled()
+  })
 
-  it('protocol-relative URL -> prepends https:// and resolves', async () => {
-    process.env.FETCHORAW_MODE = 'FETCH';
-    const fetchoraw = new Fetchoraw(mockResolver);
-    const { output } = await fetchoraw.url('//cdn.com/x.jpg');
-    expect(output).toBe('resolved:https://cdn.com/x.jpg');
-  });
+  it('CACHE mode & miss -> returns original URL', async () => {
+    await fs.writeFile(TEST_CACHE_PATH, JSON.stringify([]), 'utf8')
 
-  it('same URL used twice -> reuses cached value (no re-resolution)', async () => {
-    process.env.FETCHORAW_MODE = 'FETCH';
-    const fetchoraw = new Fetchoraw(mockResolver);
-    await fetchoraw.url(testUrl);
-    await fetchoraw.url(testUrl);
-    expect(mockResolver).toHaveBeenCalledTimes(1);
-  });
+    process.env.PUBLIC_FETCHORAW_MODE = 'CACHE'
+    const f = new Fetchoraw(mockResolver, {
+      cacheFilePath: TEST_CACHE_PATH,
+    })
 
-  it('resolver throws -> url() also throws', async () => {
-    process.env.FETCHORAW_MODE = 'FETCH';
-    const throwing = vi.fn(async () => { throw new Error('boom') });
-    const fetchoraw = new Fetchoraw(throwing);
-    await expect(fetchoraw.url(testUrl)).rejects.toThrow('boom');
-  });
+    const result = await f.url(TEST_URL)
+    expect(result.path).toBe(TEST_URL)
+    expect(mockResolver).not.toHaveBeenCalled()
+  })
 
-  it('empty URL string -> returns empty and does not call resolver', async () => {
-    process.env.FETCHORAW_MODE = 'FETCH';
-    const mockResolver = vi.fn();
-    const fetchoraw = new Fetchoraw(mockResolver);
-  
-    const { output, map } = await fetchoraw.url('');
-  
-    expect(output).toBe('');
-    expect(map.size).toBe(0);
-    expect(mockResolver).not.toHaveBeenCalled();
-  });
-  
-});
+  it('FETCH mode -> uses resolver and updates cache', async () => {
+    process.env.PUBLIC_FETCHORAW_MODE = 'FETCH'
+    const f = new Fetchoraw(mockResolver, {
+      cacheFilePath: TEST_CACHE_PATH,
+    })
+
+    const result = await f.url(TEST_URL)
+    expect(result.path).toBe(RESOLVED_VALUE)
+    expect(mockResolver).toHaveBeenCalledWith(TEST_URL, {})
+
+    const file = await fs.readFile(TEST_CACHE_PATH, 'utf8')
+    const parsed = JSON.parse(file)
+    const hasEntry = parsed.find(([key]) => key === CACHE_KEY)
+    expect(hasEntry).toBeTruthy()
+  })
+})
