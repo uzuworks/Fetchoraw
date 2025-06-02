@@ -27,7 +27,7 @@ describe('Fetchoraw.url() in CACHE mode', () => {
       enableCacheEnvValue: 'CACHE',
       cacheFilePath: TEST_CACHE_PATH,
     })
-    await expect(ins.url(TEST_URL)).rejects.toThrow(/Cache file path is not set or does not exist/)
+    expect((await ins.url(TEST_URL)).path).toBe(TEST_URL)
   })
 
   it('CACHE mode with valid cache -> returns cached result', async () => {

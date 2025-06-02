@@ -1,4 +1,3 @@
-import { mkdir, readFile, writeFile } from 'fs/promises'
 import * as cheerio from 'cheerio';
 import type { ResolveAssetFn, FetchorawOptions, Selector, FetchorawUrlResult, FetchorawHtmlResult, ResolverResult, ExecMode } from './types.js';
 import {
@@ -15,7 +14,6 @@ import {
   DEFAULT_CACHE_FILE_PATH
 } from './defaults.js';
 import { cmsUrls, urlSelectors } from './presets.js';
-import path, { dirname } from 'path';
 import { pathExists } from './utils.js';
 
 const PROJECT_ROOT = process.cwd()
@@ -35,7 +33,7 @@ export class Fetchoraw {
   private envModeName: string;
   private enableFetchValue: string;
   private enableCacheValue: string;
-  private cacheFileFullPath: string;
+  private cacheFilePath: string;
   
   private urlMap: Map<string, ResolverResult> = new Map();
   private execMode: ExecMode = 'NONE';
@@ -55,19 +53,31 @@ export class Fetchoraw {
     this.envModeName = options.envModeName ?? DEFAULT_ENV_NAME;
     this.enableFetchValue = options.enableFetchEnvValue ?? DEFAULT_ENABLE_FETCH_ENV_VALUE;
     this.enableCacheValue = options.enableCacheEnvValue ?? DEFAULT_ENABLE_CACHE_ENV_VALUE;
-    this.cacheFileFullPath = path.join(PROJECT_ROOT, options.cacheFilePath ?? DEFAULT_CACHE_FILE_PATH);
+    this.cacheFilePath = options.cacheFilePath ?? DEFAULT_CACHE_FILE_PATH;
 
     if(this.envModeName.length !== 0){
       //@ts-ignore
       const envValue = process.env[this.envModeName] || import.meta.env[this.envModeName];
       if(envValue === this.enableFetchValue){
         this.execMode = 'FETCH';
-      }else if(envValue === this.enableCacheValue && this.cacheFileFullPath.length !== 0){
+      }else if(envValue === this.enableCacheValue && this.cacheFilePath.length !== 0){
         this.execMode = 'CACHE';
       }
     }
   }
 
+  private async getCacheFileFullPath(): Promise<string|undefined> {
+    try {
+      const path = await import('path');
+      if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
+        throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
+      }
+
+      return path.join(PROJECT_ROOT, this.cacheFilePath);
+    }catch (error) {
+      return void 0;
+    }
+  }
 
   private generateMapKey(url: string, fetchOptions: RequestInit): string {
     if (Object.keys(fetchOptions).length === 0){
@@ -92,38 +102,69 @@ export class Fetchoraw {
     return entries;
   }
   private async loadFileMap(){
-    if(this.execMode === 'CACHE' && !(await pathExists(this.cacheFileFullPath))){
-      throw new Error(`Cache file path is not set or does not exist: ${this.cacheFileFullPath}`);
+    const cacheFileFullPath = await this.getCacheFileFullPath();
+    if(!cacheFileFullPath){
+      return
     }
 
-    if(0 < this.cacheFileFullPath.length){
+    if(this.execMode === 'CACHE' && !(await pathExists(cacheFileFullPath))){
+      throw new Error(`Cache file path is not set or does not exist: ${cacheFileFullPath}`);
+    }
+
+    if(0 < cacheFileFullPath.length){
+      let fsp;
+      try{
+        fsp = await import('fs/promises');
+        if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
+          throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
+        }
+      }catch (error) {
+        return
+      }
+
       try {
-        if(!(await pathExists(this.cacheFileFullPath))){
-          console.log(`Cache file ${this.cacheFileFullPath} does not exist.`);
+        if(!(await pathExists(cacheFileFullPath))){
+          console.log(`Cache file ${cacheFileFullPath} does not exist.`);
           this.urlMap = new Map();
           return;
         }
-        console.log(`Loading cache from ${this.cacheFileFullPath}`);
-        const fileContent = await readFile(this.cacheFileFullPath, 'utf8');
+        console.log(`Loading cache from ${cacheFileFullPath}`);
+        const fileContent = await fsp.readFile(cacheFileFullPath, 'utf8');
         const fileMap = JSON.parse(fileContent);
         this.urlMap = new Map(fileMap);
       } catch (error) {
-        console.error(`Failed to load cache from ${this.cacheFileFullPath}:`, error);
+        console.error(`Failed to load cache from ${cacheFileFullPath}:`, error);
       }
     }else{
       this.urlMap = new Map<string, ResolverResult>();
     }
   }
   private async saveFileMap() {
-    if(0 < this.cacheFileFullPath.length){
-      try {
-        if(!(await pathExists(dirname(this.cacheFileFullPath)))){
-          await mkdir(dirname(this.cacheFileFullPath), { recursive: true });
+    const cacheFileFullPath = await this.getCacheFileFullPath();
+    if(!cacheFileFullPath){
+      return
+    }
+
+    if(0 < cacheFileFullPath.length){
+      let fsp, path;
+      try{
+        fsp = await import('fs/promises');
+        path = await import('path');
+        if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
+          throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
         }
-        await writeFile(this.cacheFileFullPath, JSON.stringify(Array.from(this.urlMap.entries()), null, 2), 'utf8');
-        console.log(`Saved cache to ${this.cacheFileFullPath}`);
+      }catch (error) {
+        return
+      }
+
+      try {
+        if(!(await pathExists(path.dirname(cacheFileFullPath)))){
+          await fsp.mkdir(path.dirname(cacheFileFullPath), { recursive: true });
+        }
+        await fsp.writeFile(cacheFileFullPath, JSON.stringify(Array.from(this.urlMap.entries()), null, 2), 'utf8');
+        console.log(`Saved cache to ${cacheFileFullPath}`);
       } catch (error) {
-        console.error(`Failed to save cache to ${this.cacheFileFullPath}:`, error);
+        console.error(`Failed to save cache to ${cacheFileFullPath}:`, error);
       }
     }
   }
@@ -138,68 +179,65 @@ export class Fetchoraw {
    */
   async html(inputHtml: string, config?: { selectors?: Selector[] }): Promise<FetchorawHtmlResult> {
     console.log('Exec mode: ', this.execMode);
-
-    try{
-      const localMap = new Map<string, ResolverResult>();
-      if(this.execMode === 'NONE'){
-        return { html: inputHtml, map: this.formatResultMap(localMap) };
-      }
-
-      await this.loadFileMap();
-
-      const targetSelectors = config?.selectors ?? Fetchoraw.defaults.DEFAULT_SELECTORS;
-      const $ = cheerio.load(inputHtml);
-
-      for (const { selector, attr } of targetSelectors) {
-        const elements = $(selector).toArray();
-        for (const el of elements) {
-          const original = $(el).attr(attr);
-          if(!original) {
-            continue
-          }
-
-          const hasCache = this.urlMap.has(this.generateMapKey(original, {}));
-
-          if(this.execMode === 'CACHE'){
-            if(hasCache){
-              const resolvedData = this.urlMap.get(this.generateMapKey(original, {}))!;
-              localMap.set(this.generateMapKey(original, {}), resolvedData);
-              $(el).attr(attr, resolvedData.path);
-            }else{
-              console.warn(`Cache miss: ${original}`);
-            }
-            continue;
-          }
-
-          if(hasCache){
-            $(el).attr(attr, this.urlMap.get(this.generateMapKey(original, {}))?.path);
-          }else{
-            console.log(`Rewriting: ${original}`);
-            try {
-              const resolved = await this.resolver(original);
-              const resolvedData = typeof resolved === 'string' ? { path: resolved } : resolved;
-
-              const mapKey = this.generateMapKey(original, {});
-              localMap.set(mapKey, resolvedData);
-              this.urlMap.set(mapKey, resolvedData);
-              $(el).attr(attr, resolvedData.path);
-            } catch (error) {
-              console.error(`${original} error: `, error);
-              throw error;
-            }
-          }
-
-        }
-      }
-
-      await this.saveFileMap();
-
-      return { html: $.html(), map: this.formatResultMap(localMap) };
-    } catch (error) {
-      throw error;
+    const localMap = new Map<string, ResolverResult>();
+    if(this.execMode === 'NONE'){
+      return { html: inputHtml, map: this.formatResultMap(localMap) };
     }
 
+    try {
+      await this.loadFileMap();
+    } catch (error) {
+      return { html: inputHtml, map: [] };
+    }
 
+    const targetSelectors = config?.selectors ?? Fetchoraw.defaults.DEFAULT_SELECTORS;
+    const $ = cheerio.load(inputHtml);
+
+    for (const { selector, attr } of targetSelectors) {
+      const elements = $(selector).toArray();
+      for (const el of elements) {
+        const original = $(el).attr(attr);
+        if(!original) {
+          continue
+        }
+
+        const hasCache = this.urlMap.has(this.generateMapKey(original, {}));
+
+        if(this.execMode === 'CACHE'){
+          if(hasCache){
+            const resolvedData = this.urlMap.get(this.generateMapKey(original, {}))!;
+            localMap.set(this.generateMapKey(original, {}), resolvedData);
+            $(el).attr(attr, resolvedData.path);
+          }else{
+            console.warn(`Cache miss: ${original}`);
+          }
+          continue;
+        }
+
+        if(hasCache){
+          $(el).attr(attr, this.urlMap.get(this.generateMapKey(original, {}))?.path);
+        }else{
+          console.log(`Rewriting: ${original}`);
+          try {
+            const resolved = await this.resolver(original);
+            const resolvedData = typeof resolved === 'string' ? { path: resolved } : resolved;
+
+            const mapKey = this.generateMapKey(original, {});
+            localMap.set(mapKey, resolvedData);
+            this.urlMap.set(mapKey, resolvedData);
+            $(el).attr(attr, resolvedData.path);
+          } catch (error) {
+            console.error(`${original} error: `, error);
+            throw error;
+          }
+        }
+
+      }
+    }
+
+    await this.saveFileMap();
+
+    return { html: $.html(), map: this.formatResultMap(localMap) };
   }
 
   /**
@@ -211,77 +249,74 @@ export class Fetchoraw {
    */
   async url(inputUrl: string, origin: string = '', fetchOptions: RequestInit = {}): Promise<FetchorawUrlResult> {
     console.log('Exec mode: ', this.execMode);
+    const localMap = new Map<string, ResolverResult>();
+    if(this.execMode === 'NONE'){
+      return { path: inputUrl, map: this.formatResultMap(localMap) };
+    }
 
     try {
-      const localMap = new Map<string, ResolverResult>();
-      if(this.execMode === 'NONE'){
-        return { path: inputUrl, map: this.formatResultMap(localMap) };
-      }
-
       await this.loadFileMap();
+    } catch (error) {
+      return {path: inputUrl, map: []};
+    }
 
-      if(!inputUrl){
+    if(!inputUrl){
+      return { path: inputUrl, map: this.formatResultMap(localMap) };
+    }
+
+    const hasCache = this.urlMap.has(this.generateMapKey(inputUrl, fetchOptions));
+    if(this.execMode === 'CACHE'){
+      if(hasCache){
+        const resolvedData = this.urlMap.get(this.generateMapKey(inputUrl, fetchOptions))!;
+        localMap.set(this.generateMapKey(inputUrl, fetchOptions), resolvedData);
+        return {
+          ...resolvedData,
+          map: this.formatResultMap(localMap),
+        };
+      }else{
+        console.warn(`Cache miss: ${inputUrl}`);
         return { path: inputUrl, map: this.formatResultMap(localMap) };
       }
+    }
 
-      const hasCache = this.urlMap.has(this.generateMapKey(inputUrl, fetchOptions));
-      if(this.execMode === 'CACHE'){
-        if(hasCache){
-          const resolvedData = this.urlMap.get(this.generateMapKey(inputUrl, fetchOptions))!;
-          localMap.set(this.generateMapKey(inputUrl, fetchOptions), resolvedData);
-          return {
-            ...resolvedData,
-            map: this.formatResultMap(localMap),
-          };
-        }else{
-          console.warn(`Cache miss: ${inputUrl}`);
-          return { path: inputUrl, map: this.formatResultMap(localMap) };
-        }
-      }
-
-      try {
-        const modifiedInput = (() => {
-          if(inputUrl.startsWith('http')){
-            return inputUrl;
-          }
-
-          if(inputUrl.startsWith('//')){
-            return `https:${inputUrl}`
-          }
-
-          return new URL(inputUrl, origin).href;
-        })();
-        
-        const url = new URL(modifiedInput);
-        if(hasCache){
-          const resolvedData = this.urlMap.get(this.generateMapKey(url.href, fetchOptions))!;
-          localMap.set(this.generateMapKey(url.href, fetchOptions), resolvedData);
-
-          return {
-            ...resolvedData,
-            map: this.formatResultMap(localMap),
-          }
+    try {
+      const modifiedInput = (() => {
+        if(inputUrl.startsWith('http')){
+          return inputUrl;
         }
 
-        const resolved = await this.resolver(url.href, fetchOptions);
-        const resolvedData = typeof resolved === 'string' ? { path: resolved } : resolved;
+        if(inputUrl.startsWith('//')){
+          return `https:${inputUrl}`
+        }
+
+        return new URL(inputUrl, origin).href;
+      })();
+      
+      const url = new URL(modifiedInput);
+      if(hasCache){
+        const resolvedData = this.urlMap.get(this.generateMapKey(url.href, fetchOptions))!;
         localMap.set(this.generateMapKey(url.href, fetchOptions), resolvedData);
-        this.urlMap.set(this.generateMapKey(url.href, fetchOptions), resolvedData);
-        await this.saveFileMap();
 
         return {
           ...resolvedData,
           map: this.formatResultMap(localMap),
         }
-      } catch (error) {
-        console.error(`${inputUrl} error: `, error);
-        throw error;
       }
 
+      const resolved = await this.resolver(url.href, fetchOptions);
+      const resolvedData = typeof resolved === 'string' ? { path: resolved } : resolved;
+      localMap.set(this.generateMapKey(url.href, fetchOptions), resolvedData);
+      this.urlMap.set(this.generateMapKey(url.href, fetchOptions), resolvedData);
+      await this.saveFileMap();
+
+      return {
+        ...resolvedData,
+        map: this.formatResultMap(localMap),
+      }
     } catch (error) {
+      console.error(`${inputUrl} error: `, error);
       throw error;
     }
-
   }
 
 

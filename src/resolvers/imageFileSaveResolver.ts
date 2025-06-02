@@ -1,6 +1,3 @@
-import { Buffer } from 'buffer';
-import { mkdir, writeFile } from 'fs/promises';
-import { dirname, join } from 'path';
 import type { FileSaveResolverOptions, ResolveAssetFn } from '../types.js';
 import {
   DEFAULT_SAVE_ROOT,
@@ -42,6 +39,17 @@ export function createImageFileSaveResolver(options: FileSaveResolverOptions = {
     if (url.trim().toLowerCase().startsWith('javascript:')) return url;
     if (!patterns.some(rx => rx.test(url))) return url;
 
+    let fsp, path;
+    try {
+      fsp = await import('fs/promises');
+      path = await import('path');
+      if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
+        throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
+      }
+    } catch (error) {
+      return url;
+    }
+
     try {
       const res = await fetch(url, fetchOptions);
       if (!res.ok) {
@@ -49,7 +57,7 @@ export function createImageFileSaveResolver(options: FileSaveResolverOptions = {
       }
 
       const buffer = Buffer.from(await res.arrayBuffer());
-      const paths = generateResolvedFilePaths(
+      const paths = await generateResolvedFilePaths(
         url,
         fetchOptions,
         true,
@@ -60,8 +68,8 @@ export function createImageFileSaveResolver(options: FileSaveResolverOptions = {
         prependPath
       )
 
-      await mkdir(dirname(paths.savePath), { recursive: true });
-      await writeFile(paths.savePath, buffer);
+      await fsp.mkdir(path.dirname(paths.savePath), { recursive: true });
+      await fsp.writeFile(paths.savePath, buffer);
       console.log(`Saved: ${paths.savePath}`);
 
       return paths.sitePath;

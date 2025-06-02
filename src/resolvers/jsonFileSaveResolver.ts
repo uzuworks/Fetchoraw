@@ -1,5 +1,3 @@
-import { mkdir, writeFile } from 'fs/promises';
-import { dirname, join } from 'path';
 import type { FileSaveResolverOptions, ResolveAssetFn, ResolverResult } from "../types";
 import {
   DEFAULT_SAVE_ROOT,
@@ -41,6 +39,17 @@ export function createJsonFileSaveResolver(options: FileSaveResolverOptions = {}
   return async function resolve(url: string, fetchOptions: RequestInit = {}): Promise<ResolverResult> {
     if (!patterns.some(rx => rx.test(url))) return { path: url};
 
+    let fsp, path;
+    try {
+      fsp = await import('fs/promises');
+      path = await import('path');
+      if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
+        throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
+      }
+    } catch (error) {
+      return {path: url}
+    }
+    
     try {
       const res = await fetch(url, fetchOptions);
       if (!res.ok) {
@@ -48,7 +57,7 @@ export function createJsonFileSaveResolver(options: FileSaveResolverOptions = {}
       }
       const jsonData = await res.json();
 
-      const paths = generateResolvedFilePaths(
+      const paths = await generateResolvedFilePaths(
         url,
         fetchOptions,
         false,
@@ -59,8 +68,8 @@ export function createJsonFileSaveResolver(options: FileSaveResolverOptions = {}
         prependPath
       )
 
-      await mkdir(dirname(paths.savePath), { recursive: true });
-      await writeFile(paths.savePath, JSON.stringify(jsonData, null, 2), 'utf8');
+      await fsp.mkdir(path.dirname(paths.savePath), { recursive: true });
+      await fsp.writeFile(paths.savePath, JSON.stringify(jsonData, null, 2), 'utf8');
       console.log(`Saved: ${paths.savePath}`);
 
       return {

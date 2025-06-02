@@ -9,9 +9,9 @@ describe('generateResolvedFilePaths', () => {
     prependPath: 'data',
   };
 
-  it('generates path without search or hash, keeping original extension', () => {
+  it('generates path without search or hash, keeping original extension', async () => {
     const url = 'https://api.example.com/posts/item.svg';
-    const result = generateResolvedFilePaths(
+    const result = await generateResolvedFilePaths(
       url,
       baseOptions.fetchOptions,
       false,
@@ -25,9 +25,9 @@ describe('generateResolvedFilePaths', () => {
     expect(result.sitePath).toMatch(/\/data\/posts\/item\.svg$/);
   });
 
-  it('includes search params in filename when useSearch is true', () => {
+  it('includes search params in filename when useSearch is true', async () => {
     const url = 'https://api.example.com/posts/item.svg?theme=dark&lang=en';
-    const result = generateResolvedFilePaths(
+    const result = await generateResolvedFilePaths(
       url,
       baseOptions.fetchOptions,
       true,
@@ -40,9 +40,9 @@ describe('generateResolvedFilePaths', () => {
     expect(result.savePath).toMatch(/item\-themedark\-langen\.svg$/);
   });
 
-  it('adds hash to filename when hashLength > 0', () => {
+  it('adds hash to filename when hashLength > 0', async () => {
     const url = 'https://api.example.com/posts/item.svg';
-    const result = generateResolvedFilePaths(
+    const result = await generateResolvedFilePaths(
       url,
       baseOptions.fetchOptions,
       false,
@@ -55,9 +55,9 @@ describe('generateResolvedFilePaths', () => {
     expect(result.savePath).toMatch(/item\-[a-f0-9]{6}\.svg$/);
   });
 
-  it('forces extension if forceExt is provided', () => {
+  it('forces extension if forceExt is provided', async () => {
     const url = 'https://api.example.com/posts/item';
-    const result = generateResolvedFilePaths(
+    const result = await generateResolvedFilePaths(
       url,
       baseOptions.fetchOptions,
       false,
@@ -70,9 +70,9 @@ describe('generateResolvedFilePaths', () => {
     expect(result.savePath).toMatch(/item\.json$/);
   });
 
-  it('generates both savePath and sitePath correctly', () => {
+  it('generates both savePath and sitePath correctly', async () => {
     const url = 'https://api.example.com/posts/item.svg';
-    const result = generateResolvedFilePaths(
+    const result = await generateResolvedFilePaths(
       url,
       baseOptions.fetchOptions,
       false,

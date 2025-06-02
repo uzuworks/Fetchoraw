@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { OnErrorHandle, ResolverResult } from "./types";
 import { basename, dirname, extname, join, normalize } from 'path';
 import { access, constants } from 'fs/promises';
@@ -26,7 +25,7 @@ export function onErrorHandler<T = string | ResolverResult>(
   throw error;
 } 
 
-export function generateResolvedFilePaths(
+export async function generateResolvedFilePaths(
   url: string,
   fetchOptions: RequestInit,
   useSearch: boolean,
@@ -36,6 +35,19 @@ export function generateResolvedFilePaths(
   keyString: string | RegExp,
   prependPath: string
 ){
+  let crypto;
+  try {
+    crypto = await import('crypto');
+    if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
+      throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
+    }
+  } catch (error) {
+    return {
+      savePath: url,
+      sitePath: url
+    }
+  }
+
   const urlObj = new URL(url);
   const replacedSearch = useSearch ? [...urlObj.searchParams.entries()]
     .map(([k, v]) => `-${k}${v}`)
