@@ -4,7 +4,6 @@ const imp_crypto = 'crypto';
 const imp_fsp = 'fs/promises';
 const imp_path = 'path';
 
-
 export async function pathExists(path: string) {
   let fsp;
   try {
@@ -23,6 +22,14 @@ export async function pathExists(path: string) {
   } catch {
     console.warn(`Path does not exist: ${path}`);
     return false;
+  }
+}
+
+export function getProjectRoot() {
+  if(typeof process !== 'undefined' && typeof process.cwd === 'function'){
+    return process.cwd()
+  }else{
+    '/'
   }
 }
 

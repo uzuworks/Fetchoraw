@@ -11,8 +11,6 @@ import { generateResolvedFilePaths, onErrorHandler } from '../utils.js';
 const imp_fsp = 'fs/promises';
 const imp_path = 'path';
 
-const PROJECT_ROOT = process.cwd()
-
 /**
  * Create a resolver that fetches JSON from a remote API and saves it as a local file.
  *
