@@ -1,6 +1,6 @@
 {
   "name": "fetchoraw-repo",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A simple resolver-based URL transformer for Astro and CMS-driven projects.",
   "private": true,
   "repository": {
@@ -32,7 +32,8 @@
     "url",
     "transform",
     "selector",
-    "fetchoraw"
+    "fetchoraw",
+    "cloudflare"
   ],
   "devDependencies": {
     "@playwright/test": "^1.52.0",

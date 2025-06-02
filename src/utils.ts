@@ -1,6 +1,18 @@
 import crypto from 'crypto';
 import { OnErrorHandle, ResolverResult } from "./types";
 import { basename, dirname, extname, join, normalize } from 'path';
+import { access, constants } from 'fs/promises';
+
+export async function pathExists(path: string) {
+  try {
+    await access(path, constants.F_OK);
+    console.log(`Path exists: ${path}`);
+    return true;
+  } catch {
+    console.warn(`Path does not exist: ${path}`);
+    return false;
+  }
+}
 
 export function onErrorHandler<T = string | ResolverResult>(
   error: any,

@@ -17,6 +17,7 @@ You can replace `src`, `href`, and other attributes using your own resolver.
 * Fully customizable with your own resolver
 * Supports both full HTML rewriting and individual URL resolution
 * Built-in resolvers for data URLs, file saving, smart handling
+* Compatible with Cloudflare Workers
 
 ---
 
