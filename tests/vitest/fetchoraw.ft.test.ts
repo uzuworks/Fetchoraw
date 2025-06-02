@@ -12,6 +12,9 @@ const TEST_CACHE_PATH = 'test-cache.json'
 const IMG_URL = 'https://example.com/foo/bar.png'
 const JSON_URL = 'https://example.com/data/foo.json'
 const TEST_JSON = { message: 'Hello world!', count: 42 }
+const RESOLVED_VALUE = `RESOLVED:${IMG_URL}`
+
+const mockResolver = vi.fn(async (url: string) => RESOLVED_VALUE)
 
 beforeEach(async () => {
   await fs.rm(TMP_DIR, { recursive: true, force: true })
@@ -110,5 +113,33 @@ describe('Fetchoraw FT: jsonFileSaveResolver integration (real fs)', () => {
       resolvedPath: expectedPath,
       fetchOptions: {},
     })
+  })
+})
+
+describe('Fetchoraw (execMode: NONE and FETCH behavior)', () => {
+  it('should do nothing when execMode is NONE', async () => {
+    process.env.PUBLIC_FETCHORAW_MODE = 'NONE'
+    const fetchoraw = new Fetchoraw(mockResolver, {
+      cacheFilePath: TEST_CACHE_PATH,
+    })
+
+    const html = `<html><head></head><body><img src="${IMG_URL}" /></body></html>`
+    const result = await fetchoraw.html(html)
+
+    expect(result.html).toBe(html)
+    expect(mockResolver).not.toHaveBeenCalled()
+  })
+
+  it('should not throw even when cache file is missing in FETCH mode', async () => {
+    const fetchoraw = new Fetchoraw(mockResolver, {
+      cacheFilePath: TEST_CACHE_PATH,
+    })
+
+    const html = `<html><head></head><body><img src="${IMG_URL}" /></body></html>`
+    const result = await fetchoraw.html(html)
+
+    expect(result.html).not.toBe(html)
+    expect(result.html).toContain('RESOLVED:')
+    expect(mockResolver).toBeCalledTimes(1)
   })
 })
