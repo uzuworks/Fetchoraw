@@ -136,13 +136,12 @@ export class Fetchoraw {
    */
   async html(inputHtml: string, config?: { selectors?: Selector[] }): Promise<FetchorawHtmlResult> {
     console.log('Exec mode: ', this.execMode);
-
-    this.loadFileMap();
     const localMap = new Map<string, ResolverResult>();
-
     if(this.execMode === 'NONE'){
       return { html: inputHtml, map: this.formatResultMap(localMap) };
     }
+
+    this.loadFileMap();
 
     const targetSelectors = config?.selectors ?? Fetchoraw.defaults.DEFAULT_SELECTORS;
     const $ = cheerio.load(inputHtml);
@@ -204,12 +203,11 @@ export class Fetchoraw {
   async url(inputUrl: string, origin: string = '', fetchOptions: RequestInit = {}): Promise<FetchorawUrlResult> {
     this.loadFileMap();
     const localMap = new Map<string, ResolverResult>();
-
-    if(!inputUrl){
+    if(this.execMode === 'NONE'){
       return { path: inputUrl, map: this.formatResultMap(localMap) };
     }
 
-    if(this.execMode === 'NONE'){
+    if(!inputUrl){
       return { path: inputUrl, map: this.formatResultMap(localMap) };
     }
 
