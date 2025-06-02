@@ -1,9 +1,14 @@
 import { OnErrorHandle, ResolverResult } from "./types";
 
+const imp_crypto = 'crypto';
+const imp_fsp = 'fs/promises';
+const imp_path = 'path';
+
+
 export async function pathExists(path: string) {
   let fsp;
   try {
-    fsp = await import('fs/promises');
+    fsp = await import(imp_fsp);
     if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
       throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
     }
@@ -45,8 +50,8 @@ export async function generateResolvedFilePaths(
 ){
   let crypto, path;
   try {
-    crypto = await import('crypto');
-    path = await import('path');
+    crypto = await import(imp_crypto);
+    path = await import(imp_path);
     if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
       throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
     }

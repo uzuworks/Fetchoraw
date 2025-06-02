@@ -8,6 +8,8 @@ import {
 } from '../defaults.js';
 import { onErrorHandler } from '../utils.js';
 
+const imp_buffer = 'buffer';
+
 /**
  * Create a resolver that inlines assets as data URLs.
  *
@@ -37,7 +39,7 @@ export function createImageDataUrlResolver(options: ImageDataUrlResolverOptions 
 
     let Buffer;
     try {
-      Buffer = (await import('buffer')).Buffer;
+      Buffer = (await import(imp_buffer)).Buffer;
       if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
         throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
       }
