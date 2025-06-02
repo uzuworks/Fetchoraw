@@ -14,12 +14,12 @@ import {
   DEFAULT_CACHE_FILE_PATH
 } from './defaults.js';
 import { cmsUrls, urlSelectors } from './presets.js';
-import { pathExists } from './utils.js';
+import { getProjectRoot, pathExists } from './utils.js';
 
 const imp_fsp = 'fs/promises';
 const imp_path = 'path';
 
-const PROJECT_ROOT = process.cwd()
+const PROJECT_ROOT = getProjectRoot()
 
 /**
  * Fetchoraw: rewrite asset URLs in HTML.
