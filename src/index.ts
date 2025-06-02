@@ -16,6 +16,9 @@ import {
 import { cmsUrls, urlSelectors } from './presets.js';
 import { pathExists } from './utils.js';
 
+const imp_fsp = 'fs/promises';
+const imp_path = 'path';
+
 const PROJECT_ROOT = process.cwd()
 
 /**
@@ -68,7 +71,7 @@ export class Fetchoraw {
 
   private async getCacheFileFullPath(): Promise<string|undefined> {
     try {
-      const path = await import('path');
+      const path = await import(imp_path);
       if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
         throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
       }
@@ -114,7 +117,7 @@ export class Fetchoraw {
     if(0 < cacheFileFullPath.length){
       let fsp;
       try{
-        fsp = await import('fs/promises');
+        fsp = await import(imp_fsp);
         if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
           throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
         }
@@ -148,8 +151,8 @@ export class Fetchoraw {
     if(0 < cacheFileFullPath.length){
       let fsp, path;
       try{
-        fsp = await import('fs/promises');
-        path = await import('path');
+        fsp = await import(imp_fsp);
+        path = await import(imp_path);
         if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
           throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
         }

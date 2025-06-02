@@ -8,6 +8,9 @@ import {
 } from '../defaults.js';
 import { generateResolvedFilePaths, onErrorHandler } from '../utils.js';
 
+const imp_fsp = 'fs/promises';
+const imp_path = 'path';
+
 const PROJECT_ROOT = process.cwd()
 
 /**
@@ -41,8 +44,8 @@ export function createImageFileSaveResolver(options: FileSaveResolverOptions = {
 
     let fsp, path;
     try {
-      fsp = await import('fs/promises');
-      path = await import('path');
+      fsp = await import(imp_fsp);
+      path = await import(imp_path);
       if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
         throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
       }
