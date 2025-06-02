@@ -1,4 +1,4 @@
-import type { ImageSmartResolverOptions, ResolveAssetFn, ResolverResult } from '../types.js';
+import type { ImageSmartResolverOptions, ResolveAssetFn } from '../types.js';
 import {
   DEFAULT_TARGET_PATTERN,
   DEFAULT_INLINE_LIMIT,

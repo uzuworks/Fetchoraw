@@ -1,6 +1,3 @@
-import { Buffer } from 'buffer';
-import { extname } from 'path';
-import mime from 'mime';
 import type { ImageDataUrlResolverOptions, ResolveAssetFn } from '../types.js';
 import {
   DEFAULT_INLINE_LIMIT,
@@ -38,6 +35,16 @@ export function createImageDataUrlResolver(options: ImageDataUrlResolverOptions 
     if (url.trim().toLowerCase().startsWith('javascript:')) return url;
     if (!patterns.some(rx => rx.test(url))) return url;
 
+    let Buffer;
+    try {
+      Buffer = (await import('buffer')).Buffer;
+      if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
+        throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
+      }
+    }catch (error) {
+      return url;
+    }
+
     try {
       const res = await fetch(url, fetchOptions);
       if (!res.ok) {
@@ -47,20 +54,16 @@ export function createImageDataUrlResolver(options: ImageDataUrlResolverOptions 
       const buffer = Buffer.from(await res.arrayBuffer());
       if (buffer.length > inlineLimitBytes) return url;
   
-      const headerType = res.headers.get('content-type');
-      const fallbackType = mime.getType(extname(url));
-      const contentType = headerType || fallbackType;
+      const contentType = res.headers.get('content-type');
   
       if (!contentType) {
         throw new Error(`Unable to determine MIME type for: ${url}`);
       }
   
-      // ライブラリレベルの禁止 MIME
       if (DENY_ALWAYS_MIME_TYPES.some(rx => rx.test(contentType))) {
         return url;
       }
   
-      // 利用者指定の許可 MIME
       if (allowMimeTypes && !allowMimeTypes.some(rx => rx.test(contentType))) {
         return url;
       }
