@@ -22,13 +22,12 @@ describe('Fetchoraw.url() in CACHE mode', () => {
     await fs.rm(TEST_CACHE_PATH, { force: true })
   })
 
-  it('CACHE mode with no cache file -> throws error at construction', () => {
-    expect(() => {
-      new Fetchoraw(mockResolver, {
-        enableCacheEnvValue: 'CACHE',
-        cacheFilePath: TEST_CACHE_PATH,
-      })
-    }).toThrow(/Cache file path is not set or does not exist/)
+  it('CACHE mode with no cache file -> throws error at construction', async () => {
+    const ins = new Fetchoraw(mockResolver, {
+      enableCacheEnvValue: 'CACHE',
+      cacheFilePath: TEST_CACHE_PATH,
+    })
+    await expect(ins.url(TEST_URL)).rejects.toThrow(/Cache file path is not set or does not exist/)
   })
 
   it('CACHE mode with valid cache -> returns cached result', async () => {
