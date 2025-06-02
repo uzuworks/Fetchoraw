@@ -1,10 +1,18 @@
 import { OnErrorHandle, ResolverResult } from "./types";
-import { basename, dirname, extname, join, normalize } from 'path';
-import { access, constants } from 'fs/promises';
 
 export async function pathExists(path: string) {
+  let fsp;
   try {
-    await access(path, constants.F_OK);
+    fsp = await import('fs/promises');
+    if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
+      throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
+    }
+  }catch{
+    return false
+  }
+
+  try {
+    await fsp.access(path, fsp.constants.F_OK);
     console.log(`Path exists: ${path}`);
     return true;
   } catch {
@@ -35,9 +43,10 @@ export async function generateResolvedFilePaths(
   keyString: string | RegExp,
   prependPath: string
 ){
-  let crypto;
+  let crypto, path;
   try {
     crypto = await import('crypto');
+    path = await import('path');
     if((globalThis as any).__FETCHORAW_FORCE_NODE_FALLBACK__){
       throw new Error('__FETCHORAW_FORCE_NODE_FALLBACK__');
     }
@@ -63,17 +72,17 @@ export async function generateResolvedFilePaths(
   
   const rawPathname = decodeURI(url.replace(keyString, '').replace(urlObj.search, ''));
   const untrustedPath = [
-    `${dirname(rawPathname)}/`,
-    basename(rawPathname).replace(extname(rawPathname), ''),
+    `${path.dirname(rawPathname)}/`,
+    path.basename(rawPathname).replace(path.extname(rawPathname), ''),
     replacedSearch,
     hash,
-    forceExt ? forceExt : extname(rawPathname)
+    forceExt ? forceExt : path.extname(rawPathname)
   ].filter(Boolean).join('');
-  const normalizedPath = normalize(untrustedPath).replace(/^\.+[\\/]/, '');
-  const savePath = join(saveRoot, normalizedPath.replace(/^\/+/g, ''));
+  const normalizedPath = path.normalize(untrustedPath).replace(/^\.+[\\/]/, '');
+  const savePath = path.join(saveRoot, normalizedPath.replace(/^\/+/g, ''));
 
   return {
     savePath,
-    sitePath: '/' + join(prependPath, normalizedPath).replace(/^\/+/g, '')
+    sitePath: '/' + path.join(prependPath, normalizedPath).replace(/^\/+/g, '')
   }
 }
