@@ -50,4 +50,37 @@ describe('Fetchoraw.html()', () => {
       f.html(IMG_TAG, { selectors: SELECTORS })
     ).rejects.toThrow('fail')
   })
+  
+  it('FETCH mode + cache hit + missing actual file → fallback to resolver', async () => {
+    process.env.PUBLIC_FETCHORAW_MODE = 'FETCH'
+
+    // Prepare dummy cache entry pointing to a non-existent file
+    const dummyResolvedPath = path.join(__dirname, 'dummy.png')
+    const cacheContent = [{
+      url: TEST_URL,
+      resolvedPath: dummyResolvedPath,
+      fetchOptions: {},
+    }]
+    await fs.writeFile(TEST_CACHE_PATH, JSON.stringify(cacheContent, null, 2), 'utf-8')
+
+    // Mock fs.existsSync to simulate missing actual file
+    const existsSync = vi.spyOn(require('fs'), 'existsSync')
+    existsSync.mockReturnValue(false)
+
+    // Resolver should be called as a fallback
+    const mockResolver = vi.fn(async url => `fallback:${url}`)
+    const f = new Fetchoraw(mockResolver, { cacheFilePath: TEST_CACHE_PATH })
+
+    const { html, map } = await f.html(IMG_TAG, { selectors: SELECTORS })
+
+    expect(mockResolver).toHaveBeenCalledWith(TEST_URL)
+    expect(html).toContain(`src="fallback:${TEST_URL}"`)
+    expect(map).toContainEqual({
+      url: TEST_URL,
+      resolvedPath: `fallback:${TEST_URL}`,
+      fetchOptions: {},
+    })
+
+    existsSync.mockRestore()
+  })
 })

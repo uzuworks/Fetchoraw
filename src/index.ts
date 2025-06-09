@@ -218,21 +218,24 @@ export class Fetchoraw {
         }
 
         if(hasCache){
-          $(el).attr(attr, this.urlMap.get(this.generateMapKey(original, {}))?.path);
-        }else{
-          console.log(`Rewriting: ${original}`);
-          try {
-            const resolved = await this.resolver(original);
-            const resolvedData = typeof resolved === 'string' ? { path: resolved } : resolved;
-
-            const mapKey = this.generateMapKey(original, {});
-            localMap.set(mapKey, resolvedData);
-            this.urlMap.set(mapKey, resolvedData);
-            $(el).attr(attr, resolvedData.path);
-          } catch (error) {
-            console.error(`${original} error: `, error);
-            throw error;
+          if(await pathExists(this.urlMap.get(this.generateMapKey(original, {}))?.path || '')){
+            $(el).attr(attr, this.urlMap.get(this.generateMapKey(original, {}))?.path);
+            continue;
           }
+        }
+
+        console.log(`Rewriting: ${original}`);
+        try {
+          const resolved = await this.resolver(original);
+          const resolvedData = typeof resolved === 'string' ? { path: resolved } : resolved;
+
+          const mapKey = this.generateMapKey(original, {});
+          localMap.set(mapKey, resolvedData);
+          this.urlMap.set(mapKey, resolvedData);
+          $(el).attr(attr, resolvedData.path);
+        } catch (error) {
+          console.error(`${original} error: `, error);
+          throw error;
         }
 
       }
@@ -297,12 +300,14 @@ export class Fetchoraw {
       
       const url = new URL(modifiedInput);
       if(hasCache){
-        const resolvedData = this.urlMap.get(this.generateMapKey(url.href, fetchOptions))!;
-        localMap.set(this.generateMapKey(url.href, fetchOptions), resolvedData);
+        if(await pathExists(this.urlMap.get(this.generateMapKey(url.href, fetchOptions))?.path || '')){
+          const resolvedData = this.urlMap.get(this.generateMapKey(url.href, fetchOptions))!;
+          localMap.set(this.generateMapKey(url.href, fetchOptions), resolvedData);
 
-        return {
-          ...resolvedData,
-          map: this.formatResultMap(localMap),
+          return {
+            ...resolvedData,
+            map: this.formatResultMap(localMap),
+          }
         }
       }
 

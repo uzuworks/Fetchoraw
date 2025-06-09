@@ -65,4 +65,26 @@ describe('Fetchoraw.url()', () => {
     const hasEntry = parsed.find(([key]) => key === CACHE_KEY)
     expect(hasEntry).toBeTruthy()
   })
+
+    it('FETCH mode + cache hit + actual file missing → fallback to resolver', async () => {
+    process.env.PUBLIC_FETCHORAW_MODE = 'FETCH'
+
+    const missingFilePath = path.join(__dirname, 'non-existent-file.dat')
+    const fakeCacheEntry = [[CACHE_KEY, { path: missingFilePath }]]
+    await fs.writeFile(TEST_CACHE_PATH, JSON.stringify(fakeCacheEntry, null, 2), 'utf8')
+
+    // Mock fs.existsSync to simulate missing file
+    const existsSync = vi.spyOn(require('fs'), 'existsSync')
+    existsSync.mockReturnValue(false)
+
+    const f = new Fetchoraw(mockResolver, {
+      cacheFilePath: TEST_CACHE_PATH,
+    })
+
+    const result = await f.url(TEST_URL)
+    expect(mockResolver).toHaveBeenCalledWith(TEST_URL, {})
+    expect(result.path).toBe(RESOLVED_VALUE)
+
+    existsSync.mockRestore()
+  })
 })
