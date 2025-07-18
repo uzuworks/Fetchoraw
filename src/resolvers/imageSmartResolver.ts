@@ -4,6 +4,7 @@ import {
   DEFAULT_INLINE_LIMIT,
   DEFAULT_ALLOW_MIME_TYPES,
   DEFAULT_SAVE_ROOT,
+  DEFAULT_KEY_STRING,
   DEFAULT_PREPEND_PATH,
   DEFAULT_ON_ERROR
 } from '../defaults.js';
@@ -36,7 +37,7 @@ export function createImageSmartResolver(options: ImageSmartResolverOptions): Re
     inlineLimitBytes = DEFAULT_INLINE_LIMIT,
     allowMimeTypes = DEFAULT_ALLOW_MIME_TYPES,
     saveRoot = DEFAULT_SAVE_ROOT,
-    keyString = DEFAULT_PREPEND_PATH,
+    keyString = DEFAULT_KEY_STRING,
     prependPath = DEFAULT_PREPEND_PATH,
     onError = DEFAULT_ON_ERROR,
   } = options;
