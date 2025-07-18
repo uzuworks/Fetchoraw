@@ -89,14 +89,14 @@ new Fetchoraw(resolver, options?)
 
 ユースケースに応じて以下のリゾルバを利用できます：
 
-### `createDataUrlResolver()`
+### `createImageDataUrlResolver()`
 
 ファイルを取得して `data:` URL（base64）としてインライン化。
 
 ```ts
-import { createDataUrlResolver } from 'fetchoraw/resolvers';
+import { createImageDataUrlResolver } from 'fetchoraw/resolvers';
 
-const resolver = createDataUrlResolver();
+const resolver = createImageDataUrlResolver();
 ```
 
 オプション:
@@ -105,14 +105,14 @@ const resolver = createDataUrlResolver();
 
 ---
 
-### `createFileSaveResolver()`
+### `createImageFileSaveResolver()`
 
 ファイルをローカルに保存し、パスを書き換える。
 
 ```ts
-import { createFileSaveResolver } from 'fetchoraw/resolvers';
+import { createImageFileSaveResolver } from 'fetchoraw/resolvers';
 
-const resolver = createFileSaveResolver({
+const resolver = createImageFileSaveResolver({
   saveRoot: 'public/assets',
   prependPath: 'assets'
 });
@@ -125,14 +125,14 @@ const resolver = createFileSaveResolver({
 
 ---
 
-### `createSmartResolver()`
+### `createImageSmartResolver()`
 
 小さなファイルはインライン化、大きなファイルは保存。
 
 ```ts
-import { createSmartResolver } from 'fetchoraw/resolvers';
+import { createImageSmartResolver } from 'fetchoraw/resolvers';
 
-const resolver = createSmartResolver({
+const resolver = createImageSmartResolver({
   inlineLimitBytes: 500000,
   requireFilePatterns: [/\.svg$/]
 });

@@ -46,7 +46,7 @@ export class Fetchoraw {
    *
    * @param resolver - function to transform URL (to local path, data URL, etc.)
    * @param options - optional settings
-   * @param options.envModeName - env var name to control rewriting (default: "FETCHORAW_MODE")
+   * @param options.envModeName - env var name to control rewriting (default: "PUBLIC_FETCHORAW_MODE")
    * @param options.enableFetchValue - value that enables rewriting (default: "FETCH")
    * @param options.enableCacheValue - value that enables caching (default: "CACHE")
    * @param options.cacheFilePath - path to save cache file (default: "fetchoraw_cache.json")
