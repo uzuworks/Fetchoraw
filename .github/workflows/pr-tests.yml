@@ -27,20 +27,8 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Run TypeScript compilation check
-      run: npm run ts
-      
-    - name: Build project
-      run: npm run build
-      
-    - name: Run unit tests
-      run: npm run ut
-      
-    - name: Install Playwright browsers
-      run: npx playwright install --with-deps
-      
-    - name: Run E2E tests
-      run: npm run pw
+    - name: Run tests
+      run: npm run test
       
     - name: Upload test results
       uses: actions/upload-artifact@v4
