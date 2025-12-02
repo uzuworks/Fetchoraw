@@ -11,7 +11,7 @@
     "strict": true,
     "allowJs": false,
     "isolatedModules": false,
-    "types": ["vitest/globals"],
+    "types": ["vitest/globals", "@types/node"],
   },
   "include": ["src", "test"],
   "exclude": ["dist", "coverage", "src/futures", "node_modules"]
