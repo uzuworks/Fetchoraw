@@ -91,14 +91,14 @@ new Fetchoraw(resolver, options?)
 
 You can use any of the included resolvers depending on your use case:
 
-### `createDataUrlResolver()`
+### `createImageDataUrlResolver()`
 
 Fetches and inlines assets as base64 `data:` URLs.
 
 ```ts
-import { createDataUrlResolver } from 'fetchoraw/resolvers';
+import { createImageDataUrlResolver } from 'fetchoraw/resolvers';
 
-const resolver = createDataUrlResolver();
+const resolver = createImageDataUrlResolver();
 ```
 
 Options:
@@ -108,14 +108,14 @@ Options:
 
 ---
 
-### `createFileSaveResolver()`
+### `createImageFileSaveResolver()`
 
 Saves remote assets to the local filesystem.
 
 ```ts
-import { createFileSaveResolver } from 'fetchoraw/resolvers';
+import { createImageFileSaveResolver } from 'fetchoraw/resolvers';
 
-const resolver = createFileSaveResolver({
+const resolver = createImageFileSaveResolver({
   saveRoot: 'public/assets',
   prependPath: 'assets'
 });
@@ -129,14 +129,14 @@ Options:
 
 ---
 
-### `createSmartResolver()`
+### `createImageSmartResolver()`
 
 Combines `data:` and file saving based on file size and URL pattern.
 
 ```ts
-import { createSmartResolver } from 'fetchoraw/resolvers';
+import { createImageSmartResolver } from 'fetchoraw/resolvers';
 
-const resolver = createSmartResolver({
+const resolver = createImageSmartResolver({
   inlineLimitBytes: 500000,
   requireFilePatterns: [/\.svg$/]
 });

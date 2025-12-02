@@ -22,5 +22,8 @@ export default defineConfig({
         'tests/playwright/**',
       ],
     },
+    sequence: {
+      concurrent: false
+    }
   },
 });
