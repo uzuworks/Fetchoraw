@@ -6,7 +6,7 @@ import { createImageFileSaveResolver } from '../../src/resolvers/imageFileSaveRe
 import { createJsonFileSaveResolver } from '../../src/resolvers/jsonFileSaveResolver'
 
 const TMP_DIR = path.join(process.cwd(), 'tmp-assets')
-const TEST_CACHE_PATH = 'test-cache.json'
+const TEST_CACHE_PATH = 'test-cache-ft.json'
 
 // URLs
 const IMG_URL = 'https://example.com/foo/bar.png'

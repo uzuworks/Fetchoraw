@@ -3,7 +3,7 @@ import { Fetchoraw } from '../../src/index'
 import fs from 'fs/promises'
 import path from 'path'
 
-const TEST_CACHE_PATH = 'test-cache.json'
+const TEST_CACHE_PATH = 'test-cache-cache.json'
 const TEST_URL = 'https://example.com/image.png'
 const CACHE_KEY = `${TEST_URL}::{}`
 const CACHED_RESULT = { path: 'CACHED_PATH' }

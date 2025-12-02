@@ -4,7 +4,7 @@ import path from 'path'
 import fs from 'fs/promises'
 
 const TEST_URL = 'https://example.com/image.png'
-const TEST_CACHE_PATH = 'test-cache.json'
+const TEST_CACHE_PATH = 'test-cache-html.json'
 const IMG_TAG = `<img src="${TEST_URL}">`
 const SELECTORS = [Fetchoraw.SelectorPresets.ImgSrc]
 
